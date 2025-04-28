@@ -4,7 +4,7 @@ import 'package:blockchain_based_national_election_admin_app/features/auth/prese
 import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/widgets/textForm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});

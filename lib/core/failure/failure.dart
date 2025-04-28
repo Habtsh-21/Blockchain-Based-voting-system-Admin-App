@@ -24,3 +24,12 @@ class UserDisabledFailure extends Failure {}
 class EmailAlreadyInUseFailure extends Failure{}
 
 class OperationNotAllowedFailure extends Failure{}
+
+class PartyAlreadyExistFailure extends Failure{}
+
+class StateAlreadyExistFailure extends Failure{}
+
+class RepAlreadyExistFailure extends Failure{}
+
+
+class TransactionFailedFailure extends Failure{}

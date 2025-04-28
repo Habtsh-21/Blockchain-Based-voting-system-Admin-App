@@ -21,3 +21,14 @@ class EmailAlreadyInUseException implements Exception {}
 
 class OperationNotAllowedException implements Exception {}
 
+
+
+class PartyAlreadyExistException implements Exception{}
+
+
+class StateAlreadyExistException implements Exception{}
+
+class RepAlreadyExistException implements Exception{}
+
+
+class TransactionFailedException implements Exception{}

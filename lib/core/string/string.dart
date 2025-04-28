@@ -9,3 +9,5 @@ const String INVALID_EMAIL = 'Invalid email';
 const String USER_DISABLED = 'User Disabled';
 const String ALREADY_LOGGED_IN = 'Aleardy loggedIn';
 const String OPERATION_IS_NOT_ALLOWED = 'Operation is not allowed';
+
+const String PartyAlreadyExisted  = 'party already exist';

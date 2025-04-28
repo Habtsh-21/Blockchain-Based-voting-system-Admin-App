@@ -1,0 +1,17 @@
+import 'package:equatable/equatable.dart';
+
+class PartyEntity extends Equatable {
+  final String partyName;
+  final String partySymbol;
+  final String partyId;
+   final int votes;
+  const PartyEntity(
+      {required this.partyName,
+      required this.partySymbol,
+      required this.partyId,
+      this.votes = 0,
+      });
+
+  @override
+  List<Object?> get props => [partyName, partyId];
+}

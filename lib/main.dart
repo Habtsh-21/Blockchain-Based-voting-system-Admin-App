@@ -1,16 +1,14 @@
-import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/pages/login.dart';
 import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/widgets/auth_gate.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
     url: 'https://zohckgmkkhkxuovbbyrz.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvaGNrZ21ra2hreHVvdmJieXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3ODUwOTMsImV4cCI6MjA2MTM2MTA5M30.ARr87USkmghu7v2OpBQXkuX_ZF5-u1MI2TXRSzlfKZU',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvaGNrZ21ra2hreHVvdmJieXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3ODUwOTMsImV4cCI6MjA2MTM2MTA5M30.ARr87USkmghu7v2OpBQXkuX_ZF5-u1MI2TXRSzlfKZU',
   );
   runApp(const ProviderScope(child: MyApp()));
 }
