@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 class PartyEntity extends Equatable {
   final String partyName;
   final String partySymbol;
-  final String partyId;
+  final int partyId;
    final int votes;
   const PartyEntity(
       {required this.partyName,

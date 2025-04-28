@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class StateEntity extends Equatable {
   final String stateName;
-  final String stateId;
+  final int stateId;
 
   const StateEntity({required this.stateName, required this.stateId});
   
