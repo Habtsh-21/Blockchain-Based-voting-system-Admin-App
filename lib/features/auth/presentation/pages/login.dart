@@ -25,7 +25,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
     final pState = ref.watch(providerStateProvider);
-    final supabase = Supabase.instance.client;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -138,45 +137,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                                   print(
                                       'Trying login with: ${_emailController.text}/${_passwordController.text}');
-                                  // try {
-                                  //   final response = await supabase.auth
-                                  //       .signInWithPassword(
-                                  //           email: _emailController.text,
-                                  //           password: _passwordController.text);
-                                  //   if (response.user != null) {
-                                  //     print('loggedin');
-                                  //   }
-                                  // } on AuthException catch (e) {
-                                  //   print(
-                                  //       'auth exception: code=${e.code}, message=${e.message}');
-                                  //   final message = e.message.toLowerCase();
-                                  //   if (message.contains(
-                                  //       'invalid login credentials')) {
-                                  //     print('invalid login credentials');
-                                  //   } else if (message
-                                  //       .contains('invalid email')) {
-                                  //     print('invalid email');
-                                  //   } else if (message
-                                  //       .contains('user not found')) {
-                                  //     print('user not found');
-                                  //   } else if (message.contains(
-                                  //           'email already registered') ||
-                                  //       message
-                                  //           .contains('already registered')) {
-                                  //        print('email already registered');
-                                  //   } else if (message
-                                  //       .contains('signups not allowed')) {
-                                  //        print('signups not allowed');
-                                  //   } else if (message
-                                  //       .contains('too many requests')) {
-                                  //       print('too many requests');
-                                  //   } else {
-                                  //      print('server ');
-                                  //   }
-                                  // } catch (e) {
-                                  //   print('Other error: $e');
-                                  //      print('other error');
-                                  // }
+                                
                                   ref
                                         .read(providerStateProvider.notifier)
                                         .login(_emailController.text, _passwordController.text);

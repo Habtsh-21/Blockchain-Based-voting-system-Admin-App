@@ -1,4 +1,5 @@
 import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/pages/login.dart';
+import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/widgets/auth_gate.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      home: const AuthGate(),
     );
   }
 }

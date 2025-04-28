@@ -1,0 +1,46 @@
+import 'package:blockchain_based_national_election_admin_app/features/auth/data/data_source/remote_data_source.dart';
+import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/pages/login.dart';
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: CircularProgressIndicator(),
+          );
+        }
+        final session = snapshot.hasData ? snapshot.data!.session : null;
+
+        if (session == null) {
+          return const LoginPage();
+        } else {
+          return Scaffold(
+            body: Center(
+              child: MaterialButton(
+                onPressed: () {
+                  final RemoteDataSourceImpl remote = RemoteDataSourceImpl();   // for test
+                  setState(() {
+                    remote.logOut();
+                  });
+                },
+                child: const Text('LOGOUT'),
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+}
