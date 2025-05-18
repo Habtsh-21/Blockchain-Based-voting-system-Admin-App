@@ -145,15 +145,15 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     state = stateChecker(result, StateAddedState());
   }
 
-  Future<void> addRep(String repName, String repPhoto, PartyEntity repParty,
-      StateEntity repState) async {
+  Future<void> addRep(
+      String repName, String repPhoto, int partyId, int stateId) async {
     state = RepAddingState();
 
     final result = await addRepUsecase(RepresentativeEntity(
         repName: repName,
         repPhoto: repPhoto,
-        party: repParty,
-        state: repState));
+        partyId: partyId,
+        stateId: stateId));
     state = stateChecker(result, RepAddedState());
   }
 
@@ -179,7 +179,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
   }
 
   Future<List<PartyModel>?> getParties() async {
-    state =  PartyFetchingState();
+    state = PartyFetchingState();
 
     final result = await getPartyUsecase();
 

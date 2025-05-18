@@ -5,18 +5,18 @@ import 'package:equatable/equatable.dart';
 class RepresentativeEntity extends Equatable {
   final String repName;
   final String repPhoto;
-  final PartyEntity party;
-  final StateEntity state;
+  final int partyId;
+  final int stateId;
   final int votes;
 
   const RepresentativeEntity(
       {required this.repName,
       required this.repPhoto,
-      required this.party,
-      required this.state,
+      required this.partyId,
+      required this.stateId,
       this.votes = 0,
       });
 
   @override
-  List<Object?> get props => [party, state];
+  List<Object?> get props => [partyId, stateId];
 }

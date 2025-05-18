@@ -6,16 +6,15 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-class State extends ConsumerStatefulWidget {
-  const State({super.key});
+class AddState extends ConsumerStatefulWidget {
+  const AddState({super.key});
 
   @override
-  ConsumerState<State> createState() => _PartyState();
+  ConsumerState<AddState> createState() => _AddStateState();
 }
 
-class _PartyState extends ConsumerState<State> {
+class _AddStateState extends ConsumerState<AddState> {
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final idController = TextEditingController();
@@ -82,10 +81,11 @@ class _PartyState extends ConsumerState<State> {
                   GradientButton(
                     onPress: () async {
                       if(_formKey.currentState!.validate()){
-                        
+                        int? id = int.tryParse(idController.text);
+                        await ref.read(contractProvider.notifier).addState(nameController.text, id!);
                       }
                     },
-                    text: contractProviderState is PartyAddingState
+                    text: contractProviderState is StateAddingState
                         ? const Center(child: CircularProgressIndicator())
                         : const Text(
                             "Submit",
@@ -105,9 +105,9 @@ class _PartyState extends ConsumerState<State> {
                         fontSize: 12,
                       ),
                     ),
-                  if (contractProviderState is PartyAddedState)
+                  if (contractProviderState is StateAddedState)
                     const Text(
-                      'Party Added successfully',
+                      'State Added successfully',
                       style: TextStyle(
                         color: Colors.green,
                         fontSize: 12,

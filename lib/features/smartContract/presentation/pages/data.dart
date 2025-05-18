@@ -1,4 +1,6 @@
-import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/party.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/add_party.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/add_rep.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/add_state.dart';
 import 'package:flutter/material.dart';
 
 class Data extends StatefulWidget {
@@ -13,8 +15,8 @@ class _DataState extends State<Data> {
   Widget build(BuildContext context) {
     return const TabBarView(children: [
       AddParty(),
-      State(),
-      Center(child: Text('Settings Content')),
+      AddState(),
+      AddRepresentative(),
     ]);
   }
 }

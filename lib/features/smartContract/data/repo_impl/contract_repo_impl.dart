@@ -46,8 +46,8 @@ class ContractRepoImpl extends ContractRepository {
         RepresentativeModel repModel = RepresentativeModel(
             repName: repEntity.repName,
             repPhoto: repEntity.repPhoto,
-            party: repEntity.party,
-            state: repEntity.state);
+            partyId: repEntity.partyId,
+            stateId: repEntity.stateId);
         final txHash = await remoteContractDataSource.addRep(repModel);
         return Right(txHash);
       } on RepAlreadyExistException {

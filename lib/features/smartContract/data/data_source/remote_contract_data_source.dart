@@ -45,7 +45,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   late ContractAbi _contractAbi;
   late Credentials _credentials;
 
-  void init() async {
+  Future<void> init() async {
     _client = Web3Client(
       _rpcUrl,
       Client(),
@@ -55,8 +55,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
     );
 
     _credentials = EthPrivateKey.fromHex(PRIVATE_KEY);
-    String abiString =
-        await rootBundle.loadString('assets/file/json/abi.json');
+    String abiString = await rootBundle.loadString('assets/file/json/abi.json');
     Map<String, dynamic> jsondecoded = jsonDecode(abiString);
 
     final abiJson = jsondecoded['abi'] as List<dynamic>;
@@ -74,17 +73,25 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> addParty(PartyModel partyModel) async {
     try {
-      init();
+      print(1);
+      await init();
+      print(2);
+      print(
+          "${partyModel.partyId} ${partyModel.partySymbol}  ${partyModel.partyName}");
       _addParty = _contract.function('addParty');
       final transactionHash = await _client.sendTransaction(
           _credentials,
           Transaction.callContract(
-              contract: _contract,
-              function: _addParty,
-              parameters: partyModel.toList()),
+            contract: _contract,
+            function: _addParty,
+            parameters: partyModel.toList(),
+          ),
           chainId: 11155111);
+      print(3);
+      print('transaction hash --- $transactionHash');
       return transactionHash;
     } catch (e) {
+      print("exception $e");
       if (e.toString().contains("Party ID already exists")) {
         throw PartyAlreadyExistException();
       } else if (e.toString().contains('reverted')) {
@@ -98,7 +105,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> addState(StateModel stateModel) async {
     try {
-      init();
+      await init();
       _addState = _contract.function('addState');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -122,7 +129,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> addRep(RepresentativeModel repModel) async {
     try {
-      init();
+      await init();
       _addRep = _contract.function('assignRepresentative');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -146,7 +153,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> deleteParty(int partyId) async {
     try {
-      init();
+      await init();
       _deleteParty = _contract.function('delateParty');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -164,7 +171,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> deleteRep(int partyId, int stateId) async {
     try {
-      init();
+      await init();
       _deleteRep = _contract.function('delateRep');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -182,7 +189,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> deleteState(int stateId) async {
     try {
-      init();
+      await init();
       _deleteState = _contract.function('delateState');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -200,7 +207,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<List<PartyModel>> getParties() async {
     try {
-      init();
+      await init();
       _getParties = _contract.function('partiesList');
 
       final result = await _client.call(
@@ -225,7 +232,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<List<RepresentativeModel>> getRep() async {
     try {
-      init();
+      await init();
       _getReps = _contract.function('repList');
       final result = await _client.call(
         contract: _contract,
@@ -236,11 +243,8 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
           .map((rep) => RepresentativeModel(
               repName: rep[0],
               repPhoto: rep[1],
-              party: PartyModel(
-                  partyName: rep[2][0],
-                  partySymbol: rep[2][1],
-                  partyId: rep[2][2]),
-              state: StateModel(stateName: rep[3][0], stateId: rep[3][1]),
+              partyId: rep[2],
+              stateId: rep[3],
               votes: rep[4]))
           .toList();
       return repList;
@@ -252,7 +256,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<List<StateModel>> getState() async {
     try {
-      init();
+      await init();
       _getStates = _contract.function('statesList');
       final result = await _client.call(
         contract: _contract,

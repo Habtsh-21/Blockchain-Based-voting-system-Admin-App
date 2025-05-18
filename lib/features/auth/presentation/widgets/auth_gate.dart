@@ -1,5 +1,6 @@
 import 'package:blockchain_based_national_election_admin_app/features/auth/data/data_source/remote_data_source.dart';
 import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/pages/login.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/pages/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -26,19 +27,7 @@ class _AuthGateState extends State<AuthGate> {
         if (session == null) {
           return const LoginPage();
         } else {
-          return Scaffold(
-            body: Center(
-              child: MaterialButton(
-                onPressed: () {
-                  final RemoteDataSourceImpl remote = RemoteDataSourceImpl();   // for test
-                  setState(() {
-                    remote.logOut();
-                  });
-                },
-                child: const Text('LOGOUT'),
-              ),
-            ),
-          );
+          return const MainPage();
         }
       },
     );
