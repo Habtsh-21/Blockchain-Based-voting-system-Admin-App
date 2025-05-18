@@ -12,8 +12,8 @@ class _DataState extends State<Data> {
   @override
   Widget build(BuildContext context) {
     return const TabBarView(children: [
-      Party(),
-      Center(child: Text('Profile Content')),
+      AddParty(),
+      State(),
       Center(child: Text('Settings Content')),
     ]);
   }

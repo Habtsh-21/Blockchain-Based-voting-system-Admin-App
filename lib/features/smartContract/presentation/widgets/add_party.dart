@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:blockchain_based_national_election_admin_app/core/widgets/gradient_button.dart';
 import 'package:blockchain_based_national_election_admin_app/core/widgets/textfield.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider.dart';
@@ -11,14 +10,14 @@ import 'package:path/path.dart';
 import 'package:mime/mime.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class Party extends ConsumerStatefulWidget {
-  const Party({super.key});
+class AddParty extends ConsumerStatefulWidget {
+  const AddParty({super.key});
 
   @override
-  ConsumerState<Party> createState() => _PartyState();
+  ConsumerState<AddParty> createState() => _PartyState();
 }
 
-class _PartyState extends ConsumerState<Party> {
+class _PartyState extends ConsumerState<AddParty> {
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final idController = TextEditingController();
