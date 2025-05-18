@@ -2,6 +2,9 @@ import 'package:blockchain_based_national_election_admin_app/core/failure/failur
 import 'package:blockchain_based_national_election_admin_app/core/network/network.dart';
 import 'package:blockchain_based_national_election_admin_app/core/string/string.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/data_source/remote_contract_data_source.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/rep_model.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/repo_impl/contract_repo_impl.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/entities/party_entity.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/entities/representative_entity.dart';
@@ -99,8 +102,6 @@ final getRepProvider = Provider<GetRepUsecase>(
   },
 );
 
-
-
 class ContractNotifier extends StateNotifier<ContractProviderState> {
   final AddPartyUsecase addPartyUsecase;
   final AddStateUsecase addStateUsecase;
@@ -122,6 +123,10 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     required this.getStateUsecase,
     required this.getRepUsecase,
   }) : super(ContractInitialState());
+
+  List<PartyModel>? partyList;
+  List<StateModel>? stateList;
+  List<RepresentativeModel>? repList;
 
   Future<void> addParty(
       String partyName, String partySymbol, int partyId) async {
@@ -173,25 +178,41 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     state = stateChecker(result, RepDeletedState());
   }
 
-  Future<void> getParties() async {
-    state = PartyFetchingState();
+  Future<List<PartyModel>?> getParties() async {
+    state =  PartyFetchingState();
 
     final result = await getPartyUsecase();
-    state = stateChecker(result, PartyFetchedState());
+
+    state = result.fold(
+        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+      partyList = r;
+      return RepFetchedState();
+    });
+    return partyList;
   }
 
-  Future<void> getStates() async {
+  Future<List<StateModel>?> getStates() async {
     state = StateFetchingState();
 
     final result = await getStateUsecase();
-    state = stateChecker(result, StateFetchedState());
+    state = result.fold(
+        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+      stateList = r;
+      return StateFetchedState();
+    });
+    return stateList;
   }
 
-  Future<void> getReps() async {
+  Future<List<RepresentativeModel>?> getReps() async {
     state = RepFetchingState();
 
     final result = await getRepUsecase();
-    state = stateChecker(result, RepFetchedState());
+    state = result.fold(
+        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+      repList = r;
+      return RepFetchedState();
+    });
+    return repList;
   }
 }
 
@@ -221,7 +242,6 @@ final contractProvider =
   },
 );
 
-
 ContractProviderState stateChecker(
     Either either, ContractProviderState pState) {
   return either.fold(
@@ -231,7 +251,7 @@ ContractProviderState stateChecker(
 
 String _mapFailureToMessage(Failure failure) {
   switch (failure.runtimeType) {
-     case const (OfflineFailure):
+    case const (OfflineFailure):
       return OFFLINE_FAILURE_MESSAGE;
     case const (PartyAlreadyExistFailure):
       return PARTY_ALREADY_EXIST;

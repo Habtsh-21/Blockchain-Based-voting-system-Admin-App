@@ -24,7 +24,7 @@ class RemoteDataSourceImpl extends RemoteDataSource {
       }
     } on AuthException catch (e) {
       print('auth exception: code=${e.code}, message=${e.message}');
-      final message = e.message?.toLowerCase() ?? '';
+      final message = e.message.toLowerCase();
       if (message.contains('invalid login credentials')) {
         throw WrongPasswordException();
       } else if (message.contains('invalid email')) {

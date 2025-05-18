@@ -1,7 +1,7 @@
+import 'package:blockchain_based_national_election_admin_app/core/widgets/textfield.dart';
 import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/provider/provider.dart';
 import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/provider/provider_state.dart';
-import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/widgets/gradient_button.dart';
-import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/widgets/textForm.dart';
+import 'package:blockchain_based_national_election_admin_app/core/widgets/gradient_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -133,15 +133,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     ),
                               onPress: () async {
                                 if (_formKey.currentState!.validate()) {
-                                  print('1');
-
-                                  print(
-                                      'Trying login with: ${_emailController.text}/${_passwordController.text}');
-                                
+                                  
                                   ref
                                         .read(providerStateProvider.notifier)
                                         .login(_emailController.text, _passwordController.text);
-                                  print("2");
+                                 
                                 }
                               },
                             ),

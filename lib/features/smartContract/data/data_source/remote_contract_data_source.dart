@@ -56,7 +56,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
 
     _credentials = EthPrivateKey.fromHex(PRIVATE_KEY);
     String abiString =
-        await rootBundle.loadString('assets/files/json/abi.json');
+        await rootBundle.loadString('assets/file/json/abi.json');
     Map<String, dynamic> jsondecoded = jsonDecode(abiString);
 
     final abiJson = jsondecoded['abi'] as List<dynamic>;

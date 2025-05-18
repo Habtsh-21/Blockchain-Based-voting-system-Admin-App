@@ -1,4 +1,4 @@
-import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/widgets/auth_gate.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/pages/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const AuthGate(),
+      home: const MainPage(),
     );
   }
 }
