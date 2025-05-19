@@ -109,7 +109,9 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> addState(StateModel stateModel) async {
     try {
+      print(1);
       await init();
+      print(2);
       _addState = _contract.function('addState');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -118,6 +120,8 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
               function: _addState,
               parameters: stateModel.toList()),
           chainId: 11155111);
+      print(3);
+      print('trx:$transactionHash');
       return transactionHash;
     } catch (e) {
       if (e.toString().contains("State ID already exists")) {

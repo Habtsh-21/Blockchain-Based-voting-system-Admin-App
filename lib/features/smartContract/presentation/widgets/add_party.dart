@@ -49,13 +49,11 @@ class _AddPartyState extends ConsumerState<AddParty> {
     final width = MediaQuery.of(context).size.width;
     ContractProviderState contractState = ref.watch(contractProvider);
 
-    // Detect change to PartyAddedState
     if (_previousState != contractState && contractState is PartyAddedState) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         QuickAlert.show(
           context: context,
           type: QuickAlertType.success,
-          backgroundColor: const Color.fromARGB(255, 34, 198, 91),
           title: 'Success!',
           textColor: Colors.black,
           text: 'trxHash:${contractState.trxHash}',
@@ -188,7 +186,11 @@ class _AddPartyState extends ConsumerState<AddParty> {
                     },
                     text: contractState is PartyAddingState ||
                             contractState is FileUpoadingState
-                        ? const Center(child: CircularProgressIndicator())
+                        ? const Center(
+                            child: Center(
+                                child: CircularProgressIndicator(
+                            color: Colors.white,
+                          )))
                         : const Text(
                             "Submit",
                             style: TextStyle(

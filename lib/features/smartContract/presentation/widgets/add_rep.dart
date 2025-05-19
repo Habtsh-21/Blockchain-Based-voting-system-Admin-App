@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart';
+import 'package:quickalert/quickalert.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddRepresentative extends ConsumerStatefulWidget {
@@ -24,6 +25,8 @@ class _AddRepState extends ConsumerState<AddRepresentative> {
   final stateIdController = TextEditingController();
   late String? photo;
 
+  ContractProviderState? _previousState;
+
   File? _image;
   XFile? pickedFile;
   final ImagePicker _picker = ImagePicker();
@@ -37,31 +40,40 @@ class _AddRepState extends ConsumerState<AddRepresentative> {
     }
   }
 
-  Future<void> onTap() async {
-    if (pickedFile == null) return;
-    final fileName = basename(pickedFile!.path);
-    final mimeType = lookupMimeType(_image!.path);
-    final storage = Supabase.instance.client.storage;
-    final bucket = storage.from('image');
-
-    final response = await bucket.uploadBinary(
-      fileName,
-      await _image!.readAsBytes(),
-      fileOptions: FileOptions(
-        contentType: mimeType,
-        upsert: true,
-      ),
-    );
-    print(response);
-
-    photo = bucket.getPublicUrl(fileName);
-  }
-
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
-    ContractProviderState contractProviderState = ref.watch(contractProvider);
+    ContractProviderState contractState = ref.watch(contractProvider);
+
+    if (_previousState != contractState && contractState is RepAddedState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          title: 'Success!',
+          textColor: Colors.black,
+          text: 'trxHash:${contractState.trxHash}',
+          borderRadius: 0,
+          barrierColor: Colors.black.withOpacity(0.2),
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    } else if (_previousState != contractState &&
+        contractState is ContractFailureState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Error',
+          textColor: Colors.black,
+          text: contractState.message,
+          borderRadius: 0,
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    }
+    _previousState = contractState;
     return SingleChildScrollView(
       child: Padding(
           padding: EdgeInsets.symmetric(
@@ -164,21 +176,32 @@ class _AddRepState extends ConsumerState<AddRepresentative> {
                   GradientButton(
                     onPress: () async {
                       if (_formKey.currentState!.validate()) {
-                        print('before');
+                        print('a1');
+                        if (_image == null) return;
                         int? partyId = int.tryParse(partyIdController.text);
                         int? stateId = int.tryParse(stateIdController.text);
 
+                        final timestamp = DateTime.now().microsecondsSinceEpoch;
+                        final fileName =
+                            "${nameController.text} - $partyId -$stateId - $timestamp";
+                        photo = await ref
+                            .read(contractProvider.notifier)
+                            .uploadImage(_image!, fileName);
+                        print('a2');
+                        print(photo);
                         if (photo != null &&
                             partyId != null &&
                             stateId != null) {
                           ref.read(contractProvider.notifier).addRep(
                               nameController.text, photo!, partyId, stateId);
+                        } else {
+                          print('something wrong');
+
+                          ref.watch(contractProvider.notifier).resetState();
                         }
-                      } else {
-                        print('something wrong');
                       }
                     },
-                    text: contractProviderState is RepAddingState
+                    text: contractState is RepAddingState
                         ? const Center(child: CircularProgressIndicator())
                         : const Text(
                             "Submit",
@@ -189,23 +212,6 @@ class _AddRepState extends ConsumerState<AddRepresentative> {
                             ),
                           ),
                   ),
-                  SizedBox(height: height * 0.02),
-                  if (contractProviderState is ContractFailureState)
-                    Text(
-                      contractProviderState.message,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 12,
-                      ),
-                    ),
-                  if (contractProviderState is RepAddedState)
-                    const Text(
-                      'Representative Added successfully',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 12,
-                      ),
-                    )
                 ],
               ))),
     );

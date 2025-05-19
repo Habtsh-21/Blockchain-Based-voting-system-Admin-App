@@ -157,7 +157,10 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
 
     final result = await addStateUsecase(
         StateEntity(stateName: stateName, stateId: stateId));
-    state = stateChecker(result, StateAddedState());
+    state = result.fold(
+        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+      return StateAddedState(trxHash: r);
+    });
   }
 
   Future<void> addRep(
@@ -169,7 +172,10 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
         repPhoto: repPhoto,
         partyId: partyId,
         stateId: stateId));
-    state = stateChecker(result, RepAddedState());
+    state = result.fold(
+        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+      return RepAddedState(trxHash: r);
+    });
   }
 
   Future<void> deleteParty(int partyId) async {

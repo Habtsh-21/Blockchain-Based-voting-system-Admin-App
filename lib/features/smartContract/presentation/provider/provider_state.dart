@@ -24,7 +24,10 @@ class PartyFetchedState extends ContractProviderState {}
 
 class StateAddingState extends ContractProviderState {}
 
-class StateAddedState extends ContractProviderState {}
+class StateAddedState extends ContractProviderState {
+  final String trxHash;
+  StateAddedState({required this.trxHash});
+}
 
 class StateDeletingState extends ContractProviderState {}
 
@@ -36,7 +39,10 @@ class StateFetchedState extends ContractProviderState {}
 
 class RepAddingState extends ContractProviderState {}
 
-class RepAddedState extends ContractProviderState {}
+class RepAddedState extends ContractProviderState {
+  final String trxHash;
+  RepAddedState({required this.trxHash});
+}
 
 class RepDeletingState extends ContractProviderState {}
 

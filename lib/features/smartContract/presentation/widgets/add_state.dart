@@ -4,6 +4,7 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quickalert/quickalert.dart';
 
 class AddState extends ConsumerStatefulWidget {
   const AddState({super.key});
@@ -16,12 +17,40 @@ class _AddStateState extends ConsumerState<AddState> {
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final idController = TextEditingController();
+  ContractProviderState? _previousState;
 
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
-    ContractProviderState contractProviderState = ref.watch(contractProvider);
+    ContractProviderState contractState = ref.watch(contractProvider);
+    if (_previousState != contractState && contractState is StateAddedState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          title: 'Success!',
+          textColor: Colors.black,
+          text: 'trxHash:${contractState.trxHash}',
+          borderRadius: 0,
+          barrierColor: Colors.black.withOpacity(0.2),
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    } else if (_previousState != contractState &&
+        contractState is ContractFailureState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Error',
+          textColor: Colors.black,
+          text: contractState.message,
+          borderRadius: 0,
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    }
     return SingleChildScrollView(
       child: Padding(
           padding: EdgeInsets.symmetric(
@@ -54,7 +83,7 @@ class _AddStateState extends ConsumerState<AddState> {
                   CustomTextField(
                     controller: idController,
                     labelText: "State ID",
-                    keyboardType: TextInputType.name,
+                    keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Number is required';
@@ -81,7 +110,7 @@ class _AddStateState extends ConsumerState<AddState> {
                             .addState(nameController.text, id!);
                       }
                     },
-                    text: contractProviderState is StateAddingState
+                    text: contractState is StateAddingState
                         ? const Center(child: CircularProgressIndicator())
                         : const Text(
                             "Submit",
@@ -92,23 +121,6 @@ class _AddStateState extends ConsumerState<AddState> {
                             ),
                           ),
                   ),
-                  SizedBox(height: height * 0.02),
-                  if (contractProviderState is ContractFailureState)
-                    Text(
-                      contractProviderState.message,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 12,
-                      ),
-                    ),
-                  if (contractProviderState is StateAddedState)
-                    const Text(
-                      'State Added successfully',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 12,
-                      ),
-                    )
                 ],
               ))),
     );
