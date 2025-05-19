@@ -1,4 +1,3 @@
-
 class ServerException implements Exception {}
 
 class OfflineException implements Exception {}
@@ -21,14 +20,14 @@ class EmailAlreadyInUseException implements Exception {}
 
 class OperationNotAllowedException implements Exception {}
 
+class PartyAlreadyExistException implements Exception {}
 
+class StateAlreadyExistException implements Exception {}
 
-class PartyAlreadyExistException implements Exception{}
+class RepAlreadyExistException implements Exception {}
 
+class TransactionFailedException implements Exception {}
 
-class StateAlreadyExistException implements Exception{}
+class NullPublicUrlException implements Exception {}
 
-class RepAlreadyExistException implements Exception{}
-
-
-class TransactionFailedException implements Exception{}
+class UnknownException implements Exception {}

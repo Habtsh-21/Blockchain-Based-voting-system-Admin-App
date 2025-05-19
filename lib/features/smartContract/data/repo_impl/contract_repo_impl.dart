@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:blockchain_based_national_election_admin_app/core/exception/exception.dart';
 import 'package:blockchain_based_national_election_admin_app/core/failure/failure.dart';
 import 'package:blockchain_based_national_election_admin_app/core/network/network.dart';
@@ -11,6 +13,8 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/entities/state_entity.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/repository/contract_repository.dart';
 import 'package:dartz/dartz.dart';
+import 'package:http/http.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ContractRepoImpl extends ContractRepository {
   final NetworkInfo networkInfo;
@@ -93,10 +97,11 @@ class ContractRepoImpl extends ContractRepository {
   }
 
   @override
-  ContractData deleteRep(int partyId,int stateId) async {
+  ContractData deleteRep(int partyId, int stateId) async {
     if (await networkInfo.isConnected) {
       try {
-        final txHash = await remoteContractDataSource.deleteRep(partyId,stateId);
+        final txHash =
+            await remoteContractDataSource.deleteRep(partyId, stateId);
         return Right(txHash);
       } on TransactionFailedException {
         return Left(TransactionFailedFailure());
@@ -108,7 +113,7 @@ class ContractRepoImpl extends ContractRepository {
 
   @override
   ContractData deleteState(int stateId) async {
-     if (await networkInfo.isConnected) {
+    if (await networkInfo.isConnected) {
       try {
         final txHash = await remoteContractDataSource.deleteState(stateId);
         return Right(txHash);
@@ -150,7 +155,7 @@ class ContractRepoImpl extends ContractRepository {
 
   @override
   ContractStateList getState() async {
-   if (await networkInfo.isConnected) {
+    if (await networkInfo.isConnected) {
       try {
         final list = await remoteContractDataSource.getState();
         return Right(list);
@@ -162,5 +167,26 @@ class ContractRepoImpl extends ContractRepository {
     }
   }
 
- 
+  @override
+  ContractData uploadImage(File pickedFile, String fileName) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final fileUrl =
+            await remoteContractDataSource.uploadImage(pickedFile, fileName);
+        return Right(fileUrl);
+      } on StorageException {
+        return Left(StorageFailure());
+      } on SocketException {
+        return Left(SocketFailure());
+      } on ClientException {
+        return Left(ClientFailure());
+      } on NullPublicUrlException {
+        return Left(NullValueFailure());
+      } on UnknownException {
+        return Left(UnkownFailure());
+      }
+    } else {
+      return Left(OfflineFailure());
+    }
+  }
 }

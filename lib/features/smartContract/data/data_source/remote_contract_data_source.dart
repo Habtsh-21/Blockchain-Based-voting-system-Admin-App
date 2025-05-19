@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:blockchain_based_national_election_admin_app/core/exception/exception.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
@@ -6,6 +7,8 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:web_socket_channel/io.dart';
 
@@ -27,6 +30,7 @@ abstract class RemoteContractDataSource {
   Future<List<PartyModel>> getParties();
   Future<List<StateModel>> getState();
   Future<List<RepresentativeModel>> getRep();
+  Future<String> uploadImage(File pickedFile, String fileName);
 }
 
 class RemoteContractDataSourceImpl extends RemoteContractDataSource {
@@ -272,6 +276,44 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       return stateList;
     } catch (e) {
       throw TransactionFailedException();
+    }
+  }
+
+  @override
+  Future<String> uploadImage(pickedFile, String fileName) async {
+    try {
+      final storage = Supabase.instance.client.storage;
+      final bucket = storage.from('image');
+
+      final String path = await bucket.upload(
+        fileName,
+        pickedFile,
+        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+      );
+
+      final publicUrl = bucket.getPublicUrl(path);
+
+      if (publicUrl.isEmpty) {
+        throw NullPublicUrlException();
+      }
+
+      print("Upload successful. URL: $publicUrl");
+      return publicUrl;
+    } on StorageException catch (e) {
+      print("Supabase StorageException: ${e.message}");
+      throw StorageException("Upload failed: ${e.message}");
+    } on ClientException catch (e) {
+      print("Supabase ClientException: ${e.message}");
+      throw ClientException("Upload failed: ${e.message}");
+    } on SocketException catch (e) {
+      print("Supabase SocketException: ${e.message}");
+      throw SocketException("Network issue: ${e.message}");
+    } on NullPublicUrlException catch (e) {
+      print(e);
+      rethrow;
+    } catch (e) {
+      print("Unknown error during upload: $e");
+      throw UnknownException();
     }
   }
 }

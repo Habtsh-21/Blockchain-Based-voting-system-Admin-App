@@ -6,7 +6,8 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
 
 class AddParty extends ConsumerStatefulWidget {
   const AddParty({super.key});
@@ -20,6 +21,14 @@ class _AddPartyState extends ConsumerState<AddParty> {
   final nameController = TextEditingController();
   final idController = TextEditingController();
   late String? symbol;
+  ContractProviderState? _previousState;
+
+  @override
+  void dispose() {
+    super.dispose();
+    nameController.dispose();
+    idController.dispose();
+  }
 
   File? _image;
   XFile? pickedFile;
@@ -34,27 +43,42 @@ class _AddPartyState extends ConsumerState<AddParty> {
     }
   }
 
-  Future<void> onTap() async {
-    if (pickedFile == null) return;
-    final storage = Supabase.instance.client.storage;
-    final bucket = storage.from('image');
-    final fName = "${nameController.text} - ${idController.text}";
-    final String fullPath = await bucket.upload(
-      fName,
-      _image!,
-      fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-    );
-
-    print(fullPath);
-    symbol = bucket.getPublicUrl(fName);
-    print(symbol);
-  }
-
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
-    ContractProviderState contractProviderState = ref.watch(contractProvider);
+    ContractProviderState contractState = ref.watch(contractProvider);
+
+    // Detect change to PartyAddedState
+    if (_previousState != contractState && contractState is PartyAddedState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          backgroundColor: const Color.fromARGB(255, 34, 198, 91),
+          title: 'Success!',
+          textColor: Colors.black,
+          text: 'trxHash:${contractState.trxHash}',
+          borderRadius: 0,
+          barrierColor: Colors.black.withOpacity(0.2),
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    } else if (_previousState != contractState &&
+        contractState is ContractFailureState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Error',
+          textColor: Colors.black,
+          text: contractState.message,
+          borderRadius: 0,
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    }
+    _previousState = contractState;
     return SingleChildScrollView(
       child: Padding(
           padding: EdgeInsets.symmetric(
@@ -87,7 +111,7 @@ class _AddPartyState extends ConsumerState<AddParty> {
                   CustomTextField(
                     controller: idController,
                     labelText: "party ID",
-                    keyboardType: TextInputType.name,
+                    keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Number is required';
@@ -136,21 +160,34 @@ class _AddPartyState extends ConsumerState<AddParty> {
                   GradientButton(
                     onPress: () async {
                       if (_formKey.currentState!.validate()) {
-                        print('before');
-                        await onTap();
-                        print('after');
+                        print('a1');
                         int? id = int.tryParse(idController.text);
+                        if (_image == null) return;
+                        final timestamp = DateTime.now().microsecondsSinceEpoch;
+                        final fileName =
+                            "${nameController.text} - ${idController.text} - $timestamp";
+                        symbol = await ref
+                            .read(contractProvider.notifier)
+                            .uploadImage(_image!, fileName);
+                        print('a2');
+                        print(symbol);
                         if (symbol != null && id != null) {
-                          ref
+                          await ref
                               .read(contractProvider.notifier)
                               .addParty(nameController.text, symbol!, id);
+
                           print('after after');
                         } else {
                           print('something wrong');
+
+                          ref
+                              .watch(contractProvider.notifier)
+                              .setFailure(contractState);
                         }
                       }
                     },
-                    text: contractProviderState is PartyAddingState
+                    text: contractState is PartyAddingState ||
+                            contractState is FileUpoadingState
                         ? const Center(child: CircularProgressIndicator())
                         : const Text(
                             "Submit",
@@ -162,15 +199,15 @@ class _AddPartyState extends ConsumerState<AddParty> {
                           ),
                   ),
                   SizedBox(height: height * 0.02),
-                  if (contractProviderState is ContractFailureState)
+                  if (contractState is ContractFailureState)
                     Text(
-                      contractProviderState.message,
+                      contractState.message,
                       style: const TextStyle(
                         color: Colors.red,
                         fontSize: 12,
                       ),
                     ),
-                  if (contractProviderState is PartyAddedState)
+                  if (contractState is PartyAddedState)
                     const Text(
                       'Party Added successfully',
                       style: TextStyle(

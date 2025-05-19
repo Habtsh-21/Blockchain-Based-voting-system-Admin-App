@@ -1,5 +1,3 @@
-
-
 import 'package:blockchain_based_national_election_admin_app/core/widgets/gradient_button.dart';
 import 'package:blockchain_based_national_election_admin_app/core/widgets/textfield.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider.dart';
@@ -18,9 +16,6 @@ class _AddStateState extends ConsumerState<AddState> {
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final idController = TextEditingController();
-
-
- 
 
   @override
   Widget build(BuildContext context) {
@@ -74,15 +69,16 @@ class _AddStateState extends ConsumerState<AddState> {
                       return null;
                     },
                   ),
-                 
                   SizedBox(
                     height: height * 0.1,
                   ),
                   GradientButton(
                     onPress: () async {
-                      if(_formKey.currentState!.validate()){
+                      if (_formKey.currentState!.validate()) {
                         int? id = int.tryParse(idController.text);
-                        await ref.read(contractProvider.notifier).addState(nameController.text, id!);
+                        await ref
+                            .read(contractProvider.notifier)
+                            .addState(nameController.text, id!);
                       }
                     },
                     text: contractProviderState is StateAddingState
@@ -118,3 +114,6 @@ class _AddStateState extends ConsumerState<AddState> {
     );
   }
 }
+
+
+// https://sepolia.etherscan.io/tx/0xc78719147174c4057cb9db212bb78f8caccaba126bdf4907f3adb05318cb70f5

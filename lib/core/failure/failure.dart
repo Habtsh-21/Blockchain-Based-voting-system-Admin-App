@@ -9,27 +9,34 @@ class OfflineFailure extends Failure {}
 
 class ServerFailure extends Failure {}
 
-
-
 class WrongPasswordFailure extends Failure {}
 
 class TooManyRequestsFailure extends Failure {}
 
-class UserNotFoundFailure extends Failure{}
+class UserNotFoundFailure extends Failure {}
 
-class InvalidEmailFailure extends Failure{}
+class InvalidEmailFailure extends Failure {}
 
 class UserDisabledFailure extends Failure {}
 
-class EmailAlreadyInUseFailure extends Failure{}
+class EmailAlreadyInUseFailure extends Failure {}
 
-class OperationNotAllowedFailure extends Failure{}
+class OperationNotAllowedFailure extends Failure {}
 
-class PartyAlreadyExistFailure extends Failure{}
+class PartyAlreadyExistFailure extends Failure {}
 
-class StateAlreadyExistFailure extends Failure{}
+class StateAlreadyExistFailure extends Failure {}
 
-class RepAlreadyExistFailure extends Failure{}
+class RepAlreadyExistFailure extends Failure {}
 
+class TransactionFailedFailure extends Failure {}
 
-class TransactionFailedFailure extends Failure{}
+class StorageFailure extends Failure {}
+
+class SocketFailure extends Failure {}
+
+class ClientFailure extends Failure {}
+
+class NullValueFailure extends Failure {}
+
+class UnkownFailure extends Failure {}

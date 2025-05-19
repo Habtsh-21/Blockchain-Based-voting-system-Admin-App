@@ -9,7 +9,10 @@ class ContractInitialState extends ContractProviderState {}
 
 class PartyAddingState extends ContractProviderState {}
 
-class PartyAddedState extends ContractProviderState {}
+class PartyAddedState extends ContractProviderState {
+  final String trxHash;
+  PartyAddedState({required this.trxHash});
+}
 
 class PartyDeletingState extends ContractProviderState {}
 
@@ -17,10 +20,7 @@ class PartyDeletedState extends ContractProviderState {}
 
 class PartyFetchingState extends ContractProviderState {}
 
-class PartyFetchedState extends ContractProviderState {
-  // final List<PartyModel> partyList;
-  // PartyFetchedState({required this.partyList});
-}
+class PartyFetchedState extends ContractProviderState {}
 
 class StateAddingState extends ContractProviderState {}
 
@@ -32,10 +32,7 @@ class StateDeletedState extends ContractProviderState {}
 
 class StateFetchingState extends ContractProviderState {}
 
-class StateFetchedState extends ContractProviderState {
-  // final List<StateModel> stateList;
-  // StateFetchedState({required this.stateList});
-}
+class StateFetchedState extends ContractProviderState {}
 
 class RepAddingState extends ContractProviderState {}
 
@@ -47,11 +44,11 @@ class RepDeletedState extends ContractProviderState {}
 
 class RepFetchingState extends ContractProviderState {}
 
-class RepFetchedState extends ContractProviderState {
-  // final List<RepresentativeModel> repList;
+class RepFetchedState extends ContractProviderState {}
 
-  // RepFetchedState({required this.repList});
-}
+class FileUpoadingState extends ContractProviderState {}
+
+class FileUpoadedState extends ContractProviderState {}
 
 class ContractSuccessState extends ContractProviderState {}
 

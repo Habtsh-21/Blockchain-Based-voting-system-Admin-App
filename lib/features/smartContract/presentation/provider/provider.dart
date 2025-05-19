@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:blockchain_based_national_election_admin_app/core/failure/failure.dart';
 import 'package:blockchain_based_national_election_admin_app/core/network/network.dart';
 import 'package:blockchain_based_national_election_admin_app/core/string/string.dart';
@@ -19,6 +21,7 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/get_party_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/get_rep_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/get_state_usecase.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/uploadImage_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider_state.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -101,6 +104,12 @@ final getRepProvider = Provider<GetRepUsecase>(
     return GetRepUsecase(contractRepository: contractRepo);
   },
 );
+final getUploadedUrl = Provider<UploadimageUsecase>(
+  (ref) {
+    final contractRepo = ref.watch(contractRepoProvider);
+    return UploadimageUsecase(contractRepository: contractRepo);
+  },
+);
 
 class ContractNotifier extends StateNotifier<ContractProviderState> {
   final AddPartyUsecase addPartyUsecase;
@@ -112,6 +121,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
   final GetPartyUsecase getPartyUsecase;
   final GetStateUsecase getStateUsecase;
   final GetRepUsecase getRepUsecase;
+  final UploadimageUsecase uploadimageUsecase;
   ContractNotifier({
     required this.addPartyUsecase,
     required this.addStateUsecase,
@@ -122,11 +132,13 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     required this.getPartyUsecase,
     required this.getStateUsecase,
     required this.getRepUsecase,
+    required this.uploadimageUsecase,
   }) : super(ContractInitialState());
 
   List<PartyModel>? partyList;
   List<StateModel>? stateList;
   List<RepresentativeModel>? repList;
+  String? fileUrl;
 
   Future<void> addParty(
       String partyName, String partySymbol, int partyId) async {
@@ -134,7 +146,10 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
 
     final result = await addPartyUsecase(PartyEntity(
         partyName: partyName, partySymbol: partySymbol, partyId: partyId));
-    state = stateChecker(result, PartyAddedState());
+    state = result.fold(
+        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+      return PartyAddedState(trxHash: r);
+    });
   }
 
   Future<void> addState(String stateName, int stateId) async {
@@ -214,6 +229,27 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     });
     return repList;
   }
+
+  Future<String?> uploadImage(File pickedFile, String fileName) async {
+    state = FileUpoadingState();
+    final result = await uploadimageUsecase(pickedFile, fileName);
+    state = result.fold(
+      (l) => ContractFailureState(message: _mapFailureToMessage(l)),
+      (r) {
+        fileUrl = r;
+        return FileUpoadedState();
+      },
+    );
+    return fileUrl;
+  }
+
+  void resetState() {
+    state = ContractInitialState();
+  }
+
+  void setFailure(ContractProviderState contractState) {
+    state = contractState;
+  }
 }
 
 final contractProvider =
@@ -228,6 +264,7 @@ final contractProvider =
     final getPartyUsecase = ref.watch(getPartyProvider);
     final getStateUsecase = ref.watch(getStateProvider);
     final getRepUsecase = ref.watch(getRepProvider);
+    final getFileUrl = ref.watch(getUploadedUrl);
     return ContractNotifier(
       addPartyUsecase: addPartyUsecase,
       addStateUsecase: addStateUsecase,
@@ -238,6 +275,7 @@ final contractProvider =
       getPartyUsecase: getPartyUsecase,
       getStateUsecase: getStateUsecase,
       getRepUsecase: getRepUsecase,
+      uploadimageUsecase: getFileUrl,
     );
   },
 );
@@ -261,6 +299,16 @@ String _mapFailureToMessage(Failure failure) {
       return REP_ALREADY_EXIST;
     case const (TransactionFailedFailure):
       return TRANSACTION_FAILED;
+    case const (SocketFailure):
+      return SOCKET_FAILED;
+    case const (StorageFailure):
+      return STORAGE_MESSAGE;
+    case const (ClientFailure):
+      return CLIENT_FAILED;
+    case const (NullValueFailure):
+      return NULL_VALUE;
+    case const (UnkownFailure):
+      return UNKOWN_PROBLEM;
     default:
       return "Unexpected Error , Please try again later .";
   }
