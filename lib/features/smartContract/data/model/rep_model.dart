@@ -1,4 +1,3 @@
-
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/entities/representative_entity.dart';
 
 class RepresentativeModel extends RepresentativeEntity {
@@ -10,7 +9,7 @@ class RepresentativeModel extends RepresentativeEntity {
       super.votes});
 
   List<dynamic> toList() {
-    return [repName, repPhoto, partyId, stateId];
+    return [repName, repPhoto, BigInt.from(partyId), BigInt.from(stateId)];
   }
 
   RepresentativeModel fromList(List<dynamic> list) {
@@ -18,7 +17,7 @@ class RepresentativeModel extends RepresentativeEntity {
         repName: list[0],
         repPhoto: list[1],
         partyId: list[2],
-        stateId: list[4],
+        stateId: list[3],
         votes: list[4]);
   }
 }

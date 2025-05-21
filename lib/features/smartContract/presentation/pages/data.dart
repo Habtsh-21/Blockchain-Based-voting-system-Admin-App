@@ -13,10 +13,28 @@ class Data extends StatefulWidget {
 class _DataState extends State<Data> {
   @override
   Widget build(BuildContext context) {
-    return const TabBarView(children: [
-      AddParty(),
-      AddState(),
-      AddRepresentative(),
-    ]);
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text("Election"),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: "Add Party"),
+              Tab(text: "Add State"),
+              Tab(text: "Add Rep"),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            AddParty(),
+            AddState(),
+            AddRepresentative(),
+          ],
+        ),
+      ),
+    );
   }
 }

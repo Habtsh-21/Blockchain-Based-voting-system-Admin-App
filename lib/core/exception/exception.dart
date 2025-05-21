@@ -26,7 +26,10 @@ class StateAlreadyExistException implements Exception {}
 
 class RepAlreadyExistException implements Exception {}
 
-class TransactionFailedException implements Exception {}
+class TransactionFailedException implements Exception {
+  final String message;
+  TransactionFailedException({required this.message});
+}
 
 class NullPublicUrlException implements Exception {}
 

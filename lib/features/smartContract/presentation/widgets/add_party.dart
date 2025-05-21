@@ -163,7 +163,7 @@ class _AddPartyState extends ConsumerState<AddParty> {
                         if (_image == null) return;
                         final timestamp = DateTime.now().microsecondsSinceEpoch;
                         final fileName =
-                            "${nameController.text} - ${idController.text} - $timestamp";
+                            "${nameController.text}-${idController.text}-$timestamp";
                         symbol = await ref
                             .read(contractProvider.notifier)
                             .uploadImage(_image!, fileName);

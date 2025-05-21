@@ -33,10 +33,14 @@ class ContractRepoImpl extends ContractRepository {
             partyId: partyEntity.partyId);
         final txHash = await remoteContractDataSource.addParty(partyModel);
         return Right(txHash);
-      } on PartyAlreadyExistException {
-        return Left(PartyAlreadyExistFailure());
-      } on TransactionFailedException {
-        return Left(TransactionFailedFailure());
+      } catch (e) {
+        if (e is PartyAlreadyExistException) {
+          return Left(RepAlreadyExistFailure());
+        } else if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
       }
     } else {
       return Left(OfflineFailure());
@@ -54,10 +58,14 @@ class ContractRepoImpl extends ContractRepository {
             stateId: repEntity.stateId);
         final txHash = await remoteContractDataSource.addRep(repModel);
         return Right(txHash);
-      } on RepAlreadyExistException {
-        return Left(RepAlreadyExistFailure());
-      } on TransactionFailedException {
-        return Left(TransactionFailedFailure());
+      } catch (e) {
+        if (e is RepAlreadyExistException) {
+          return Left(RepAlreadyExistFailure());
+        } else if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
       }
     } else {
       return Left(OfflineFailure());
@@ -72,10 +80,14 @@ class ContractRepoImpl extends ContractRepository {
             stateName: stateEntity.stateName, stateId: stateEntity.stateId);
         final txHash = await remoteContractDataSource.addState(stateModel);
         return Right(txHash);
-      } on StateAlreadyExistException {
-        return Left(StateAlreadyExistFailure());
-      } on TransactionFailedException {
-        return Left(TransactionFailedFailure());
+      } catch (e) {
+        if (e is StateAlreadyExistException) {
+          return Left(RepAlreadyExistFailure());
+        } else if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
       }
     } else {
       return Left(OfflineFailure());
@@ -88,8 +100,12 @@ class ContractRepoImpl extends ContractRepository {
       try {
         final txHash = await remoteContractDataSource.deleteParty(partyId);
         return Right(txHash);
-      } on TransactionFailedException {
-        return Left(TransactionFailedFailure());
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
       }
     } else {
       return Left(OfflineFailure());
@@ -103,8 +119,12 @@ class ContractRepoImpl extends ContractRepository {
         final txHash =
             await remoteContractDataSource.deleteRep(partyId, stateId);
         return Right(txHash);
-      } on TransactionFailedException {
-        return Left(TransactionFailedFailure());
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
       }
     } else {
       return Left(OfflineFailure());
@@ -117,8 +137,12 @@ class ContractRepoImpl extends ContractRepository {
       try {
         final txHash = await remoteContractDataSource.deleteState(stateId);
         return Right(txHash);
-      } on TransactionFailedException {
-        return Left(TransactionFailedFailure());
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
       }
     } else {
       return Left(OfflineFailure());
@@ -131,8 +155,12 @@ class ContractRepoImpl extends ContractRepository {
       try {
         final list = await remoteContractDataSource.getParties();
         return Right(list);
-      } on TransactionFailedException {
-        return Left(TransactionFailedFailure());
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
       }
     } else {
       return Left(OfflineFailure());
@@ -145,8 +173,12 @@ class ContractRepoImpl extends ContractRepository {
       try {
         final list = await remoteContractDataSource.getRep();
         return Right(list);
-      } on TransactionFailedException {
-        return Left(TransactionFailedFailure());
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
       }
     } else {
       return Left(OfflineFailure());
@@ -159,8 +191,12 @@ class ContractRepoImpl extends ContractRepository {
       try {
         final list = await remoteContractDataSource.getState();
         return Right(list);
-      } on TransactionFailedException {
-        return Left(TransactionFailedFailure());
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
       }
     } else {
       return Left(OfflineFailure());

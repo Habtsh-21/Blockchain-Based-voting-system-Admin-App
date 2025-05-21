@@ -6,10 +6,7 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mime/mime.dart';
-import 'package:path/path.dart';
 import 'package:quickalert/quickalert.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddRepresentative extends ConsumerStatefulWidget {
   const AddRepresentative({super.key});

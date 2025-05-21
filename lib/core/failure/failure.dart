@@ -29,7 +29,10 @@ class StateAlreadyExistFailure extends Failure {}
 
 class RepAlreadyExistFailure extends Failure {}
 
-class TransactionFailedFailure extends Failure {}
+class TransactionFailedFailure extends Failure {
+  final String message;
+  TransactionFailedFailure({required this.message});
+}
 
 class StorageFailure extends Failure {}
 

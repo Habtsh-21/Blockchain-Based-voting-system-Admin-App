@@ -133,12 +133,20 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     required this.getStateUsecase,
     required this.getRepUsecase,
     required this.uploadimageUsecase,
-  }) : super(ContractInitialState());
+  }) : super(ContractInitialState()) {
+    initialize();
+  }
 
   List<PartyModel>? partyList;
   List<StateModel>? stateList;
   List<RepresentativeModel>? repList;
   String? fileUrl;
+  int counter = 0;
+  void initialize() async {
+    partyList = await fatchParties();
+    stateList = await fatchStates();
+    // repList = await fatchReps();
+  }
 
   Future<void> addParty(
       String partyName, String partySymbol, int partyId) async {
@@ -150,6 +158,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
         (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
       return PartyAddedState(trxHash: r);
     });
+    Future.delayed(const Duration(seconds: 2), () => resetState());
   }
 
   Future<void> addState(String stateName, int stateId) async {
@@ -161,6 +170,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
         (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
       return StateAddedState(trxHash: r);
     });
+    Future.delayed(const Duration(seconds: 2), () => resetState());
   }
 
   Future<void> addRep(
@@ -176,63 +186,91 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
         (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
       return RepAddedState(trxHash: r);
     });
+    Future.delayed(const Duration(seconds: 2), () => resetState());
   }
 
   Future<void> deleteParty(int partyId) async {
     state = PartyDeletingState();
 
     final result = await deletePartyUsecase(partyId);
-    state = stateChecker(result, PartyDeletedState());
+    state = result.fold(
+        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+      return PartyDeletedState(txHash: r);
+    });
+    Future.delayed(const Duration(seconds: 2), () => resetState());
   }
 
   Future<void> deleteState(int stateId) async {
     state = StateDeletingState();
 
     final result = await deleteStateUsecase(stateId);
-    state = stateChecker(result, StateDeletedState());
+    state = result.fold(
+        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+      return StateDeletedState(txHash: r);
+    });
+    Future.delayed(const Duration(seconds: 2), () => resetState());
   }
 
   Future<void> deleteRep(int partyId, int stateId) async {
-    state = RepDeletingState();
+    state = DataLoadingState();
 
     final result = await deleteRepUsecase(partyId, stateId);
-    state = stateChecker(result, RepDeletedState());
-  }
-
-  Future<List<PartyModel>?> getParties() async {
-    state = PartyFetchingState();
-
-    final result = await getPartyUsecase();
-
     state = result.fold(
         (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
-      partyList = r;
-      return RepFetchedState();
+      return RepDeletedState(txHash: r);
     });
+    Future.delayed(const Duration(seconds: 2), () => resetState());
+  }
+
+  Future<List<PartyModel>?> fatchParties() async {
+    state = PartyFetchingState();
+    final result = await getPartyUsecase();
+    state = result.fold((l) {
+      return ContractFailureState(message: _mapFailureToMessage(l));
+    }, (r) {
+      partyList = r;
+      return PartyFetchedState(partiesList: r);
+    });
+
+    Future.delayed(const Duration(seconds: 2), () => resetState());
     return partyList;
   }
 
-  Future<List<StateModel>?> getStates() async {
+  Future<List<StateModel>?> fatchStates() async {
     state = StateFetchingState();
 
     final result = await getStateUsecase();
     state = result.fold(
         (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
       stateList = r;
-      return StateFetchedState();
+      return StateFetchedState(stateList: r);
     });
+    Future.delayed(const Duration(seconds: 2), () => resetState());
     return stateList;
   }
 
-  Future<List<RepresentativeModel>?> getReps() async {
+  Future<List<RepresentativeModel>?> fatchReps() async {
     state = RepFetchingState();
 
     final result = await getRepUsecase();
     state = result.fold(
         (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
       repList = r;
-      return RepFetchedState();
+      return RepFetchedState(repList: r);
     });
+    Future.delayed(const Duration(seconds: 2), () => resetState());
+    return repList;
+  }
+
+  List<PartyModel>? getParties() {
+    return partyList;
+  }
+
+  List<StateModel>? getStates() {
+    return stateList;
+  }
+
+  List<RepresentativeModel>? getReps() {
     return repList;
   }
 
@@ -246,6 +284,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
         return FileUpoadedState();
       },
     );
+    Future.delayed(const Duration(seconds: 2), () => resetState());
     return fileUrl;
   }
 
@@ -304,7 +343,7 @@ String _mapFailureToMessage(Failure failure) {
     case const (RepAlreadyExistFailure):
       return REP_ALREADY_EXIST;
     case const (TransactionFailedFailure):
-      return TRANSACTION_FAILED;
+      return (failure as TransactionFailedFailure).message;
     case const (SocketFailure):
       return SOCKET_FAILED;
     case const (StorageFailure):

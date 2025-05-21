@@ -1,3 +1,6 @@
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/rep_model.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class ContractProviderState extends Equatable {
@@ -6,6 +9,10 @@ abstract class ContractProviderState extends Equatable {
 }
 
 class ContractInitialState extends ContractProviderState {}
+
+class DataLoadingState extends ContractProviderState {}
+
+class DataLoadedState extends ContractProviderState {}
 
 class PartyAddingState extends ContractProviderState {}
 
@@ -16,11 +23,17 @@ class PartyAddedState extends ContractProviderState {
 
 class PartyDeletingState extends ContractProviderState {}
 
-class PartyDeletedState extends ContractProviderState {}
+class PartyDeletedState extends ContractProviderState {
+  final String txHash;
+  PartyDeletedState({required this.txHash});
+}
 
 class PartyFetchingState extends ContractProviderState {}
 
-class PartyFetchedState extends ContractProviderState {}
+class PartyFetchedState extends ContractProviderState {
+  final List<PartyModel> partiesList;
+  PartyFetchedState({required this.partiesList});
+}
 
 class StateAddingState extends ContractProviderState {}
 
@@ -31,11 +44,17 @@ class StateAddedState extends ContractProviderState {
 
 class StateDeletingState extends ContractProviderState {}
 
-class StateDeletedState extends ContractProviderState {}
+class StateDeletedState extends ContractProviderState {
+  final String txHash;
+  StateDeletedState({required this.txHash});
+}
 
 class StateFetchingState extends ContractProviderState {}
 
-class StateFetchedState extends ContractProviderState {}
+class StateFetchedState extends ContractProviderState {
+  final List<StateModel> stateList;
+  StateFetchedState({required this.stateList});
+}
 
 class RepAddingState extends ContractProviderState {}
 
@@ -46,11 +65,17 @@ class RepAddedState extends ContractProviderState {
 
 class RepDeletingState extends ContractProviderState {}
 
-class RepDeletedState extends ContractProviderState {}
+class RepDeletedState extends ContractProviderState {
+  final String txHash;
+  RepDeletedState({required this.txHash});
+}
 
 class RepFetchingState extends ContractProviderState {}
 
-class RepFetchedState extends ContractProviderState {}
+class RepFetchedState extends ContractProviderState {
+  final List<RepresentativeModel> repList;
+  RepFetchedState({required this.repList});
+}
 
 class FileUpoadingState extends ContractProviderState {}
 

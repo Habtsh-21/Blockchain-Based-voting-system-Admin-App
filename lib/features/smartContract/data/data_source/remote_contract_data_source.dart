@@ -7,7 +7,8 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:web_socket_channel/io.dart';
@@ -88,21 +89,19 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
           Transaction.callContract(
             contract: _contract,
             function: _addParty,
-            parameters: partyModel.toList(),
+            parameters: [
+              partyModel.partyName,
+              partyModel.partySymbol,
+              BigInt.from(partyModel.partyId)
+            ],
           ),
           chainId: 11155111);
       print(3);
       print('transaction hash --- $transactionHash');
       return transactionHash;
     } catch (e) {
-      print("exception $e");
-      if (e.toString().contains("Party ID already exists")) {
-        throw PartyAlreadyExistException();
-      } else if (e.toString().contains('reverted')) {
-        throw TransactionFailedException();
-      } else {
-        throw TransactionFailedException();
-      }
+      print(e.toString());
+      throw TransactionFailedException(message: e.toString());
     }
   }
 
@@ -124,20 +123,17 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       print('trx:$transactionHash');
       return transactionHash;
     } catch (e) {
-      if (e.toString().contains("State ID already exists")) {
-        throw StateAlreadyExistException();
-      } else if (e.toString().contains('reverted')) {
-        throw TransactionFailedException();
-      } else {
-        throw TransactionFailedException();
-      }
+      print(e.toString());
+      throw TransactionFailedException(message: e.toString());
     }
   }
 
   @override
   Future<String> addRep(RepresentativeModel repModel) async {
     try {
+      print('1a');
       await init();
+      print('2a');
       _addRep = _contract.function('assignRepresentative');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -146,33 +142,34 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
               function: _addRep,
               parameters: repModel.toList()),
           chainId: 11155111);
+      print('txHash:   $transactionHash');
       return transactionHash;
     } catch (e) {
-      if (e.toString().contains("State ID already exists")) {
-        throw RepAlreadyExistException();
-      } else if (e.toString().contains('reverted')) {
-        throw TransactionFailedException();
-      } else {
-        throw TransactionFailedException();
-      }
+      print(e.toString());
+      throw TransactionFailedException(message: e.toString());
     }
   }
 
   @override
   Future<String> deleteParty(int partyId) async {
     try {
+      print('11d');
       await init();
+      print('12d');
       _deleteParty = _contract.function('delateParty');
       final transactionHash = await _client.sendTransaction(
           _credentials,
           Transaction.callContract(
               contract: _contract,
               function: _deleteParty,
-              parameters: [partyId]),
+              parameters: [BigInt.from(partyId)]),
           chainId: 11155111);
+
+      print('delete: $transactionHash');
       return transactionHash;
     } catch (e) {
-      throw TransactionFailedException();
+      print('error : ${e.toString()}');
+      throw TransactionFailedException(message: e.toString());
     }
   }
 
@@ -190,7 +187,8 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
           chainId: 11155111);
       return transactionHash;
     } catch (e) {
-      throw TransactionFailedException();
+      print(e.toString());
+      throw TransactionFailedException(message: e.toString());
     }
   }
 
@@ -208,32 +206,59 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
           chainId: 11155111);
       return transactionHash;
     } catch (e) {
-      throw TransactionFailedException();
+      print(e.toString());
+      throw TransactionFailedException(message: e.toString());
     }
   }
 
   @override
   Future<List<PartyModel>> getParties() async {
     try {
+      print(1);
       await init();
+      print(2);
       _getParties = _contract.function('partiesList');
-
       final result = await _client.call(
         contract: _contract,
         function: _getParties,
         params: [],
       );
+      // print('result: $result:  ${result.length}');
+      // print('result: ${result.length}');
+      final rawList = result[0] as List;
+      // print('raw:  $rawList');
+      final completeParties = rawList.where((item) {
+        return item is List && item.length == 4;
+      }).toList();
+      // print('complate :   $completeParties: ${completeParties.length}');
+      // print('complate :  ${completeParties.length}');
 
-      final partyList = (result[0] as List)
-          .map((party) => PartyModel(
-              partyName: party[0],
-              partySymbol: party[1],
-              partyId: party[3],
-              votes: party[3]))
-          .toList();
+      List<PartyModel> partyList = [];
+      for (List<dynamic> party in completeParties) {
+        final partyId = int.tryParse(party[2].toString());
+        final votes = int.tryParse(party[3].toString());
+
+        if (party[0] !=
+                null && //in our smart contract when party object delete, partyname and symbol  become empty not completely removed. what is way we have to check whether they are empty or not
+            party[0].toString().isNotEmpty &&
+            party[0] != null &&
+            party[0].toString().isNotEmpty &&
+            partyId != null &&
+            votes != null) {
+          partyList.add(PartyModel(
+            partyName: party[0] as String,
+            partySymbol: party[1] as String,
+            partyId: partyId,
+            votes: votes,
+          ));
+        } else {
+          print("Skipping invalid entry: $party");
+        }
+      }
       return partyList;
     } catch (e) {
-      throw TransactionFailedException();
+      print('party error:   ${e.toString()}');
+      throw TransactionFailedException(message: e.toString());
     }
   }
 
@@ -247,17 +272,26 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
         function: _getReps,
         params: [],
       );
-      final repList = (result[0] as List)
-          .map((rep) => RepresentativeModel(
-              repName: rep[0],
-              repPhoto: rep[1],
-              partyId: rep[2],
-              stateId: rep[3],
-              votes: rep[4]))
-          .toList();
+      final rawList = result[0] as List;
+      print(rawList);
+      final completeReps = rawList.where((item) {
+        return item is List && item.length == 5;
+      }).toList();
+
+      final repList = completeReps.map((rep) {
+        return RepresentativeModel(
+          repName: rep[0] as String,
+          repPhoto: rep[1] as String,
+          partyId: int.parse(rep[2].toString()),
+          stateId: int.parse(rep[3].toString()),
+          votes: int.parse(rep[4].toString()),
+        );
+      }).toList();
+      print('Representative: $repList');
       return repList;
     } catch (e) {
-      throw TransactionFailedException();
+      print('representative error:   ${e.toString()}');
+      throw TransactionFailedException(message: e.toString());
     }
   }
 
@@ -265,21 +299,30 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   Future<List<StateModel>> getState() async {
     try {
       await init();
+
       _getStates = _contract.function('statesList');
       final result = await _client.call(
         contract: _contract,
         function: _getStates,
         params: [],
       );
-      final stateList = (result[0] as List)
-          .map((state) => StateModel(
-                stateName: state[0],
-                stateId: state[1],
-              ))
-          .toList();
+      final rawList = result[0] as List;
+
+      final completeStates = rawList.where((item) {
+        return item is List && item.length == 2;
+      }).toList();
+
+      final stateList = completeStates.map((state) {
+        return StateModel(
+          stateName: state[0] as String,
+          stateId: int.parse(state[1].toString()),
+        );
+      }).toList();
+
       return stateList;
     } catch (e) {
-      throw TransactionFailedException();
+      print('state error:   ${e.toString()}');
+      throw TransactionFailedException(message: e.toString());
     }
   }
 
@@ -287,18 +330,22 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   Future<String> uploadImage(pickedFile, String fileName) async {
     try {
       final storage = Supabase.instance.client.storage;
-      final bucket = storage.from('image');
+      final bucket = storage.from('main');
 
-      final String path = await bucket.upload(
+      await bucket.upload(
         fileName,
         pickedFile,
         fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
       );
 
-      final publicUrl = bucket.getPublicUrl(path);
+      final publicUrl = bucket.getPublicUrl(fileName);
 
       if (publicUrl.isEmpty) {
         throw NullPublicUrlException();
+      }
+      final response = await http.head(Uri.parse(publicUrl));
+      if (response.statusCode != 200) {
+        throw Exception('Uploaded file not accessible at $publicUrl');
       }
 
       print("Upload successful. URL: $publicUrl");
