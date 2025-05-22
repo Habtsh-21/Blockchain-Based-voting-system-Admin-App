@@ -18,6 +18,8 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/get_all_data_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/get_party_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/get_state_usecase.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/pause_usecase.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/set_time_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/uploadImage_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider_state.dart';
 import 'package:dartz/dartz.dart';
@@ -94,6 +96,19 @@ final getUploadedUrl = Provider<UploadimageUsecase>(
   },
 );
 
+final setTimeProver = Provider<SetTimeUsecase>(
+  (ref) {
+    final contractRepo = ref.watch(contractRepoProvider);
+    return SetTimeUsecase(contractRepository: contractRepo);
+  },
+);
+final pauseProvider = Provider<PauseUsecase>(
+  (ref) {
+    final contractRepo = ref.watch(contractRepoProvider);
+    return PauseUsecase(contractRepository: contractRepo);
+  },
+);
+
 class ContractNotifier extends StateNotifier<ContractProviderState> {
   final AddPartyUsecase addPartyUsecase;
   final AddStateUsecase addStateUsecase;
@@ -106,6 +121,10 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
 
   final GetAllDataUsecase getAllDataUsecase;
   final UploadimageUsecase uploadimageUsecase;
+
+  final SetTimeUsecase setTimeUsecase;
+  final PauseUsecase pauseUsecase;
+
   ContractNotifier({
     required this.addPartyUsecase,
     required this.addStateUsecase,
@@ -115,6 +134,8 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     required this.getStateUsecase,
     required this.getAllDataUsecase,
     required this.uploadimageUsecase,
+    required this.setTimeUsecase,
+    required this.pauseUsecase,
   }) : super(ContractInitialState());
 
   List<PartyModel>? partyList;
@@ -124,6 +145,8 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
   bool _isVotingPaused = false;
   int _totalNoOfParties = 0;
   int _totalNoOfStates = 0;
+  int _startTime = 0;
+  int _endTime = 0;
 
   String? fileUrl;
   int counter = 0;
@@ -227,6 +250,8 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
       _totalNoOfStates = stateList != null ? stateList!.length : 0;
       _isVotingActive = r.isVotringActive;
       _isVotingPaused = r.votingPaused;
+      _startTime = r.votingStateTime;
+      _endTime = r.votingEndTime;
       return ContractAllDataFatchedState();
     });
     return allDataModel;
@@ -274,6 +299,44 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     return _isVotingPaused;
   }
 
+  Future<void> pause(bool pause) async {
+    state = VotePausingState();
+    final result = await pauseUsecase(pause);
+    state = result.fold(
+      (l) => ContractFailureState(message: _mapFailureToMessage(l)),
+      (r) {
+        fileUrl = r;
+        return VotePauseExcutedState(txHash: r);
+      },
+    );
+  }
+
+  DateTime? startTime() {
+    if (_startTime == 0) return null;
+    DateTime start = DateTime.fromMillisecondsSinceEpoch(_startTime * 1000);
+    return start;
+  }
+
+  DateTime? endTime() {
+    if (_endTime == 0) return null;
+    DateTime end = DateTime.fromMillisecondsSinceEpoch(_endTime * 1000);
+    return end;
+  }
+
+  Future<void> setTime(DateTime startTime, DateTime endTime) async {
+    state = TimeSettingState();
+    int startTimeInSeconds = startTime.millisecondsSinceEpoch ~/ 1000;
+    int endTimeInSeconds = endTime.millisecondsSinceEpoch ~/ 1000;
+    final result = await setTimeUsecase(startTimeInSeconds, endTimeInSeconds);
+    state = result.fold(
+      (l) => ContractFailureState(message: _mapFailureToMessage(l)),
+      (r) {
+        fileUrl = r;
+        return TimeSettedState(message: r);
+      },
+    );
+  }
+
   void resetState() {
     state = ContractInitialState();
   }
@@ -294,6 +357,8 @@ final contractProvider =
     final getStateUsecase = ref.watch(getStateProvider);
     final getAllDataUsecase = ref.watch(getAllDataProver);
     final getFileUrl = ref.watch(getUploadedUrl);
+    final setTimeUsecase = ref.watch(setTimeProver);
+    final pauseUsecase = ref.watch(pauseProvider);
 
     return ContractNotifier(
       addPartyUsecase: addPartyUsecase,
@@ -304,6 +369,8 @@ final contractProvider =
       getStateUsecase: getStateUsecase,
       getAllDataUsecase: getAllDataUsecase,
       uploadimageUsecase: getFileUrl,
+      setTimeUsecase: setTimeUsecase,
+      pauseUsecase: pauseUsecase,
     );
   },
 );

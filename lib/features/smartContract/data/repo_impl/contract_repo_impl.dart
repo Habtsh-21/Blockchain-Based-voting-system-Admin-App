@@ -187,4 +187,40 @@ ContractAllDta getAllData({int attempt = 1}) async {
       return Left(OfflineFailure());
     }
   }
+  
+  @override
+  ContractData setTime(int startTime, int endTime) async {
+     if (await networkInfo.isConnected) {
+      try {
+        final txHash = await remoteContractDataSource.setTime(startTime,endTime);
+        return Right(txHash);
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
+      }
+    } else {
+      return Left(OfflineFailure());
+    }
+  }
+
+  @override
+  ContractData pause(bool pause) async {
+     if (await networkInfo.isConnected) {
+      try {
+        final txHash = await remoteContractDataSource.pause(pause);
+        return Right(txHash);
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
+      }
+    } else {
+      return Left(OfflineFailure());
+    }
+  }
 }

@@ -65,6 +65,20 @@ class FileUpoadedState extends ContractProviderState {}
 
 class ContractSuccessState extends ContractProviderState {}
 
+class TimeSettingState extends ContractProviderState{}
+
+class TimeSettedState extends ContractProviderState{
+   final String message;
+  TimeSettedState({required this.message});
+}
+
+class VotePausingState extends ContractProviderState{}
+
+class VotePauseExcutedState extends ContractProviderState{
+    final String txHash;
+  VotePauseExcutedState({required this.txHash});
+}
+
 class ContractFailureState extends ContractProviderState {
   final String message;
   ContractFailureState({required this.message});

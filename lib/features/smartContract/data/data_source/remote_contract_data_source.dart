@@ -29,6 +29,8 @@ abstract class RemoteContractDataSource {
   Future<List<StateModel>> getState();
   Future<String> uploadImage(File pickedFile, String fileName);
   Future<AllDataModel> getAllData();
+  Future<String> setTime(int startTime, int endTime);
+  Future<String> pause(bool pause);
 }
 
 class RemoteContractDataSourceImpl extends RemoteContractDataSource {
@@ -41,6 +43,9 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   late ContractFunction _getParties;
   late ContractFunction _getStates;
   late ContractFunction _getAllData;
+  late ContractFunction _setTime;
+   late ContractFunction _pause;
+  late ContractFunction _resume;
   late EthereumAddress _contractAddress;
   late ContractAbi _contractAbi;
   late Credentials _credentials;
@@ -239,10 +244,10 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
     try {
       await init();
 
-      final getAllDataFunction = _contract.function('getAllData');
+      _getAllData = _contract.function('getAllData');
       final result = await _client.call(
         contract: _contract,
-        function: getAllDataFunction,
+        function: _getAllData,
         params: [],
       );
 
@@ -261,8 +266,6 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
           stateId: int.parse(state[1].toString()),
         );
       }).toList();
-
-
 
       final partyList = rawParties.map((party) {
         Map<int, int> stateVotes = {};
@@ -286,8 +289,6 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
         );
       }).toList();
 
-
-
       return AllDataModel(
         parties: partyList,
         states: stateList,
@@ -299,6 +300,28 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       );
     } catch (e) {
       print('getAllData error: ${e.toString()}');
+      throw TransactionFailedException(message: e.toString());
+    }
+  }
+
+  Future<String> setTime(int startTime, int endTime) async {
+    try {
+      await init();
+
+      _setTime = _contract.function('setVotingTimes');
+      final transactionHash = await _client.sendTransaction(
+          _credentials,
+          Transaction.callContract(
+            contract: _contract,
+            function: _setTime,
+            parameters: [BigInt.from(startTime), BigInt.from(endTime)],
+          ),
+          chainId: 11155111);
+      print(3);
+      print('transaction hash --- $transactionHash');
+      return transactionHash;
+    } catch (e) {
+      print('setTime error:   ${e.toString()}');
       throw TransactionFailedException(message: e.toString());
     }
   }
@@ -342,6 +365,41 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
     } catch (e) {
       print("Unknown error during upload: $e");
       throw UnknownException();
+    }
+  }
+
+  @override
+  Future<String> pause(bool pause) async {
+    try {
+      await init();
+      String transactionHash;
+      if (pause) {
+        _pause = _contract.function('pauseVoting');
+        transactionHash = await _client.sendTransaction(
+            _credentials,
+            Transaction.callContract(
+              contract: _contract,
+              function: _pause,
+              parameters: [],
+            ),
+            chainId: 11155111);
+      } else {
+      _resume = _contract.function('resumeVoting');
+        transactionHash = await _client.sendTransaction(
+            _credentials,
+            Transaction.callContract(
+              contract: _contract,
+              function: _resume,
+              parameters: [],
+            ),
+            chainId: 11155111);
+      }
+      print(3);
+      print('transaction hash --- $transactionHash');
+      return transactionHash;
+    } catch (e) {
+      print('setTime error:   ${e.toString()}');
+      throw TransactionFailedException(message: e.toString());
     }
   }
 }

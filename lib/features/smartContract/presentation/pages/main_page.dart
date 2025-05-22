@@ -1,4 +1,5 @@
 import 'package:blockchain_based_national_election_admin_app/core/widgets/gradient_button.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/pages/control.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/pages/data.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/pages/home_page.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/pages/registry.dart';
@@ -44,7 +45,7 @@ class _MainPageState extends ConsumerState<MainPage> {
     HomePage(),
     Data(),
     Registry(),
-    HomePage(),
+    Control(),
   ];
 
   @override
