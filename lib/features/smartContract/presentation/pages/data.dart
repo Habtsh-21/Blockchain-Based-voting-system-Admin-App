@@ -1,5 +1,4 @@
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/add_party.dart';
-import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/add_rep.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/add_state.dart';
 import 'package:flutter/material.dart';
 
@@ -31,7 +30,7 @@ class _DataState extends State<Data> {
           children: [
             AddParty(),
             AddState(),
-            AddRepresentative(),
+           
           ],
         ),
       ),

@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:blockchain_based_national_election_admin_app/core/exception/exception.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
-import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/rep_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
@@ -23,13 +22,10 @@ const String PRIVATE_KEY =
 abstract class RemoteContractDataSource {
   Future<String> addParty(PartyModel partyModel);
   Future<String> addState(StateModel stateModel);
-  Future<String> addRep(RepresentativeModel repModel);
   Future<String> deleteParty(int partyId);
   Future<String> deleteState(int stateId);
-  Future<String> deleteRep(int partyId, int stateId);
   Future<List<PartyModel>> getParties();
   Future<List<StateModel>> getState();
-  Future<List<RepresentativeModel>> getRep();
   Future<String> uploadImage(File pickedFile, String fileName);
 }
 
@@ -38,13 +34,10 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   late DeployedContract _contract;
   late ContractFunction _addParty;
   late ContractFunction _addState;
-  late ContractFunction _addRep;
   late ContractFunction _deleteParty;
   late ContractFunction _deleteState;
-  late ContractFunction _deleteRep;
   late ContractFunction _getParties;
   late ContractFunction _getStates;
-  late ContractFunction _getReps;
   late EthereumAddress _contractAddress;
   late ContractAbi _contractAbi;
   late Credentials _credentials;
@@ -128,34 +121,12 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   }
 
   @override
-  Future<String> addRep(RepresentativeModel repModel) async {
-    try {
-      print('1a');
-      await init();
-      print('2a');
-      _addRep = _contract.function('assignRepresentative');
-      final transactionHash = await _client.sendTransaction(
-          _credentials,
-          Transaction.callContract(
-              contract: _contract,
-              function: _addRep,
-              parameters: repModel.toList()),
-          chainId: 11155111);
-      print('txHash:   $transactionHash');
-      return transactionHash;
-    } catch (e) {
-      print(e.toString());
-      throw TransactionFailedException(message: e.toString());
-    }
-  }
-
-  @override
   Future<String> deleteParty(int partyId) async {
     try {
       print('11d');
       await init();
       print('12d');
-      _deleteParty = _contract.function('delateParty');
+      _deleteParty = _contract.function('deleteParty');
       final transactionHash = await _client.sendTransaction(
           _credentials,
           Transaction.callContract(
@@ -173,29 +144,10 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   }
 
   @override
-  Future<String> deleteRep(int partyId, int stateId) async {
-    try {
-      await init();
-      _deleteRep = _contract.function('delateRep');
-      final transactionHash = await _client.sendTransaction(
-          _credentials,
-          Transaction.callContract(
-              contract: _contract,
-              function: _deleteRep,
-              parameters: [stateId, partyId]),
-          chainId: 11155111);
-      return transactionHash;
-    } catch (e) {
-      print(e.toString());
-      throw TransactionFailedException(message: e.toString());
-    }
-  }
-
-  @override
   Future<String> deleteState(int stateId) async {
     try {
       await init();
-      _deleteState = _contract.function('delateState');
+      _deleteState = _contract.function('deleteState');
       final transactionHash = await _client.sendTransaction(
           _credentials,
           Transaction.callContract(
@@ -216,80 +168,25 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       print(1);
       await init();
       print(2);
-      _getParties = _contract.function('partiesList');
+      _getParties = _contract.function('getAllParties');
       final result = await _client.call(
         contract: _contract,
         function: _getParties,
         params: [],
       );
-      // print('result: $result:  ${result.length}');
-      // print('result: ${result.length}');
+
       final rawList = result[0] as List;
-      // print('raw:  $rawList');
-      final completeParties = rawList.where((item) {
-        return item is List && item.length == 4;
+
+      final partyList = rawList.map((party) {
+        return PartyModel(
+          partyName: party[0] as String,
+          partySymbol: party[1] as String,
+          partyId: int.parse(party[2].toString()),
+        );
       }).toList();
-      // print('complate :   $completeParties: ${completeParties.length}');
-      // print('complate :  ${completeParties.length}');
-
-      List<PartyModel> partyList = [];
-      for (List<dynamic> party in completeParties) {
-        final partyId = int.tryParse(party[2].toString());
-        final votes = int.tryParse(party[3].toString());
-
-        if (party[0] !=
-                null && //in our smart contract when party object delete, partyname and symbol  become empty not completely removed. what is way we have to check whether they are empty or not
-            party[0].toString().isNotEmpty &&
-            party[0] != null &&
-            party[0].toString().isNotEmpty &&
-            partyId != null &&
-            votes != null) {
-          partyList.add(PartyModel(
-            partyName: party[0] as String,
-            partySymbol: party[1] as String,
-            partyId: partyId,
-            votes: votes,
-          ));
-        } else {
-          print("Skipping invalid entry: $party");
-        }
-      }
       return partyList;
     } catch (e) {
       print('party error:   ${e.toString()}');
-      throw TransactionFailedException(message: e.toString());
-    }
-  }
-
-  @override
-  Future<List<RepresentativeModel>> getRep() async {
-    try {
-      await init();
-      _getReps = _contract.function('repList');
-      final result = await _client.call(
-        contract: _contract,
-        function: _getReps,
-        params: [],
-      );
-      final rawList = result[0] as List;
-      print(rawList);
-      final completeReps = rawList.where((item) {
-        return item is List && item.length == 5;
-      }).toList();
-
-      final repList = completeReps.map((rep) {
-        return RepresentativeModel(
-          repName: rep[0] as String,
-          repPhoto: rep[1] as String,
-          partyId: int.parse(rep[2].toString()),
-          stateId: int.parse(rep[3].toString()),
-          votes: int.parse(rep[4].toString()),
-        );
-      }).toList();
-      print('Representative: $repList');
-      return repList;
-    } catch (e) {
-      print('representative error:   ${e.toString()}');
       throw TransactionFailedException(message: e.toString());
     }
   }
@@ -307,11 +204,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       );
       final rawList = result[0] as List;
 
-      final completeStates = rawList.where((item) {
-        return item is List && item.length == 2;
-      }).toList();
-
-      final stateList = completeStates.map((state) {
+      final stateList = rawList.map((state) {
         return StateModel(
           stateName: state[0] as String,
           stateId: int.parse(state[1].toString()),

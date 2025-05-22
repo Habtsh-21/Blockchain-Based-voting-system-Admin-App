@@ -96,7 +96,7 @@ class _StatePageState extends ConsumerState<StatePage> {
                   );
                 },
               )
-            : contractState is RepFetchingState
+            : contractState is StateFetchingState
                 ? const Center(
                     child: CircularProgressIndicator(),
                   )

@@ -6,10 +6,8 @@ import 'package:blockchain_based_national_election_admin_app/core/network/networ
 import 'package:blockchain_based_national_election_admin_app/core/resource/type.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/data_source/remote_contract_data_source.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
-import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/rep_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/entities/party_entity.dart';
-import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/entities/representative_entity.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/entities/state_entity.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/repository/contract_repository.dart';
 import 'package:dartz/dartz.dart';
@@ -47,30 +45,7 @@ class ContractRepoImpl extends ContractRepository {
     }
   }
 
-  @override
-  ContractData addRep(RepresentativeEntity repEntity) async {
-    if (await networkInfo.isConnected) {
-      try {
-        RepresentativeModel repModel = RepresentativeModel(
-            repName: repEntity.repName,
-            repPhoto: repEntity.repPhoto,
-            partyId: repEntity.partyId,
-            stateId: repEntity.stateId);
-        final txHash = await remoteContractDataSource.addRep(repModel);
-        return Right(txHash);
-      } catch (e) {
-        if (e is RepAlreadyExistException) {
-          return Left(RepAlreadyExistFailure());
-        } else if (e is TransactionFailedException) {
-          return Left(TransactionFailedFailure(message: e.message));
-        } else {
-          return Left(UnkownFailure());
-        }
-      }
-    } else {
-      return Left(OfflineFailure());
-    }
-  }
+ 
 
   @override
   ContractData addState(StateEntity stateEntity) async {
@@ -112,24 +87,7 @@ class ContractRepoImpl extends ContractRepository {
     }
   }
 
-  @override
-  ContractData deleteRep(int partyId, int stateId) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final txHash =
-            await remoteContractDataSource.deleteRep(partyId, stateId);
-        return Right(txHash);
-      } catch (e) {
-        if (e is TransactionFailedException) {
-          return Left(TransactionFailedFailure(message: e.message));
-        } else {
-          return Left(UnkownFailure());
-        }
-      }
-    } else {
-      return Left(OfflineFailure());
-    }
-  }
+
 
   @override
   ContractData deleteState(int stateId) async {
@@ -167,23 +125,6 @@ class ContractRepoImpl extends ContractRepository {
     }
   }
 
-  @override
-  ContractRepList getRep() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final list = await remoteContractDataSource.getRep();
-        return Right(list);
-      } catch (e) {
-        if (e is TransactionFailedException) {
-          return Left(TransactionFailedFailure(message: e.message));
-        } else {
-          return Left(UnkownFailure());
-        }
-      }
-    } else {
-      return Left(OfflineFailure());
-    }
-  }
 
   @override
   ContractStateList getState() async {

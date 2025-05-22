@@ -1,5 +1,4 @@
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
-import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/rep_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/box_widget.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +14,6 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   List<PartyModel>? partyList;
   List<StateModel>? stateList;
-  List<RepresentativeModel>? repList;
 
   @override
   Widget build(BuildContext context) {

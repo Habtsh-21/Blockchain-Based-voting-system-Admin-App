@@ -1,5 +1,4 @@
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
-import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/rep_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:equatable/equatable.dart';
 
@@ -54,27 +53,6 @@ class StateFetchingState extends ContractProviderState {}
 class StateFetchedState extends ContractProviderState {
   final List<StateModel> stateList;
   StateFetchedState({required this.stateList});
-}
-
-class RepAddingState extends ContractProviderState {}
-
-class RepAddedState extends ContractProviderState {
-  final String trxHash;
-  RepAddedState({required this.trxHash});
-}
-
-class RepDeletingState extends ContractProviderState {}
-
-class RepDeletedState extends ContractProviderState {
-  final String txHash;
-  RepDeletedState({required this.txHash});
-}
-
-class RepFetchingState extends ContractProviderState {}
-
-class RepFetchedState extends ContractProviderState {
-  final List<RepresentativeModel> repList;
-  RepFetchedState({required this.repList});
 }
 
 class FileUpoadingState extends ContractProviderState {}
