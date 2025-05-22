@@ -9,6 +9,10 @@ abstract class ContractProviderState extends Equatable {
 
 class ContractInitialState extends ContractProviderState {}
 
+class ContractAllDataFatchingState extends ContractProviderState {}
+
+class ContractAllDataFatchedState extends ContractProviderState {}
+
 class DataLoadingState extends ContractProviderState {}
 
 class DataLoadedState extends ContractProviderState {}

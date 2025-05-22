@@ -4,6 +4,7 @@ import 'package:blockchain_based_national_election_admin_app/core/failure/failur
 import 'package:blockchain_based_national_election_admin_app/core/network/network.dart';
 import 'package:blockchain_based_national_election_admin_app/core/string/string.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/data_source/remote_contract_data_source.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/all_data_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/repo_impl/contract_repo_impl.dart';
@@ -14,6 +15,7 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/add_state_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/delete_state_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/detete_party_usecase.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/get_all_data_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/get_party_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/get_state_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/uploadImage_usecase.dart';
@@ -79,7 +81,12 @@ final getStateProvider = Provider<GetStateUsecase>(
     return GetStateUsecase(contractRepository: contractRepo);
   },
 );
-
+final getAllDataProver = Provider<GetAllDataUsecase>(
+  (ref) {
+    final contractRepo = ref.watch(contractRepoProvider);
+    return GetAllDataUsecase(contractRepository: contractRepo);
+  },
+);
 final getUploadedUrl = Provider<UploadimageUsecase>(
   (ref) {
     final contractRepo = ref.watch(contractRepoProvider);
@@ -96,6 +103,8 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
 
   final GetPartyUsecase getPartyUsecase;
   final GetStateUsecase getStateUsecase;
+
+  final GetAllDataUsecase getAllDataUsecase;
   final UploadimageUsecase uploadimageUsecase;
   ContractNotifier({
     required this.addPartyUsecase,
@@ -104,11 +113,17 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     required this.deleteStateUsecase,
     required this.getPartyUsecase,
     required this.getStateUsecase,
+    required this.getAllDataUsecase,
     required this.uploadimageUsecase,
   }) : super(ContractInitialState());
 
   List<PartyModel>? partyList;
   List<StateModel>? stateList;
+  int totalVote = 0;
+  bool _isVotingActive = false;
+  bool _isVotingPaused = false;
+  int _totalNoOfParties = 0;
+  int _totalNoOfStates = 0;
 
   String? fileUrl;
   int counter = 0;
@@ -199,12 +214,22 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     return stateList;
   }
 
-  List<PartyModel>? getParties() {
-    return partyList;
-  }
-
-  List<StateModel>? getStates() {
-    return stateList;
+  Future<AllDataModel?> fatchAllData() async {
+    AllDataModel? allDataModel;
+    state = ContractAllDataFatchingState();
+    final result = await getAllDataUsecase();
+    state = result.fold(
+        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+      allDataModel = r;
+      partyList = r.parties;
+      stateList = r.states;
+      _totalNoOfParties = partyList != null ? partyList!.length : 0;
+      _totalNoOfStates = stateList != null ? stateList!.length : 0;
+      _isVotingActive = r.isVotringActive;
+      _isVotingPaused = r.votingPaused;
+      return ContractAllDataFatchedState();
+    });
+    return allDataModel;
   }
 
   Future<String?> uploadImage(File pickedFile, String fileName) async {
@@ -219,6 +244,34 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     );
     Future.delayed(const Duration(seconds: 2), () => resetState());
     return fileUrl;
+  }
+
+  List<PartyModel>? getParties() {
+    return partyList;
+  }
+
+  List<StateModel>? getStates() {
+    return stateList;
+  }
+
+  int getTotalNoOfParties() {
+    return _totalNoOfParties;
+  }
+
+  int getTotalNoOfStates() {
+    return _totalNoOfStates;
+  }
+
+  int getTotalVote() {
+    return totalVote;
+  }
+
+  bool isVotingActive() {
+    return _isVotingActive;
+  }
+
+  bool isVotingPaused() {
+    return _isVotingPaused;
   }
 
   void resetState() {
@@ -239,7 +292,9 @@ final contractProvider =
     final deleteStateUsecase = ref.watch(deleteStateProvider);
     final getPartyUsecase = ref.watch(getPartyProvider);
     final getStateUsecase = ref.watch(getStateProvider);
+    final getAllDataUsecase = ref.watch(getAllDataProver);
     final getFileUrl = ref.watch(getUploadedUrl);
+
     return ContractNotifier(
       addPartyUsecase: addPartyUsecase,
       addStateUsecase: addStateUsecase,
@@ -247,6 +302,7 @@ final contractProvider =
       deleteStateUsecase: deleteStateUsecase,
       getPartyUsecase: getPartyUsecase,
       getStateUsecase: getStateUsecase,
+      getAllDataUsecase: getAllDataUsecase,
       uploadimageUsecase: getFileUrl,
     );
   },

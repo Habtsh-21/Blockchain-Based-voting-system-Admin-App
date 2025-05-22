@@ -1,5 +1,6 @@
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/box_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,20 +80,20 @@ class _HomePageState extends ConsumerState<HomePage> {
               mainAxisSpacing: 20,
               crossAxisSpacing: 20,
               padding: const EdgeInsets.all(8),
-              children: const [
-                Box1(
+              children:  [
+                const Box1(
                     iconData: Icons.people_sharp,
                     amount: 12000000,
                     text: 'VOTER'),
                 Box1(
                     iconData: Icons.group_work_outlined,
-                    amount: 112,
+                    amount: ref.read(contractProvider.notifier).getTotalNoOfParties(),
                     text: 'PARTIES'),
-                Box1(iconData: Icons.countertops, amount: 85, text: 'STATES'),
+                Box1(iconData: Icons.countertops, amount: ref.read(contractProvider.notifier).getTotalNoOfStates(), text: 'STATES'),
                 Box1(
                     iconData: Icons.person,
-                    amount: 1450,
-                    text: 'REPRESENTATIVE'),
+                    amount: ref.read(contractProvider.notifier).getTotalVote(),
+                    text: 'Total Votes'),
               ],
             ),
           ),

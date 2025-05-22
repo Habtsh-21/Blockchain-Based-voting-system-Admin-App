@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:blockchain_based_national_election_admin_app/core/exception/exception.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/all_data_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:flutter/services.dart';
@@ -27,6 +28,7 @@ abstract class RemoteContractDataSource {
   Future<List<PartyModel>> getParties();
   Future<List<StateModel>> getState();
   Future<String> uploadImage(File pickedFile, String fileName);
+  Future<AllDataModel> getAllData();
 }
 
 class RemoteContractDataSourceImpl extends RemoteContractDataSource {
@@ -38,6 +40,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   late ContractFunction _deleteState;
   late ContractFunction _getParties;
   late ContractFunction _getStates;
+  late ContractFunction _getAllData;
   late EthereumAddress _contractAddress;
   late ContractAbi _contractAbi;
   late Credentials _credentials;
@@ -176,12 +179,25 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       );
 
       final rawList = result[0] as List;
-
+      Map<int, int> stateVotes = {};
       final partyList = rawList.map((party) {
+        List<List<int>> stateVoteList = (party[4] as List)
+            .map(
+              (e) => [
+                int.parse(e[0].toString()),
+                int.parse(e[1].toString()),
+              ],
+            )
+            .toList();
+        for (List<int> state in stateVoteList) {
+          stateVotes[state[0]] = state[1];
+        }
         return PartyModel(
           partyName: party[0] as String,
           partySymbol: party[1] as String,
           partyId: int.parse(party[2].toString()),
+          votes: int.parse(party[3].toString()),
+          stateVotes: stateVotes,
         );
       }).toList();
       return partyList;
@@ -214,6 +230,75 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       return stateList;
     } catch (e) {
       print('state error:   ${e.toString()}');
+      throw TransactionFailedException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<AllDataModel> getAllData() async {
+    try {
+      await init();
+
+      final getAllDataFunction = _contract.function('getAllData');
+      final result = await _client.call(
+        contract: _contract,
+        function: getAllDataFunction,
+        params: [],
+      );
+
+      // Decode each item from result
+      final rawStates = result[0] as List;
+      final rawParties = result[1] as List;
+      final totalVotes = int.parse(result[2].toString());
+      final votingPaused = result[3] as bool;
+      final votingActive = result[4] as bool;
+      final startTime = int.parse(result[5].toString());
+      final endTime = int.parse(result[6].toString());
+
+      final stateList = rawStates.map((state) {
+        return StateModel(
+          stateName: state[0] as String,
+          stateId: int.parse(state[1].toString()),
+        );
+      }).toList();
+
+
+
+      final partyList = rawParties.map((party) {
+        Map<int, int> stateVotes = {};
+        List<List<int>> stateVoteList = (party[4] as List)
+            .map((e) => [
+                  int.parse(e[0].toString()),
+                  int.parse(e[1].toString()),
+                ])
+            .toList();
+
+        for (List<int> state in stateVoteList) {
+          stateVotes[state[0]] = state[1];
+        }
+
+        return PartyModel(
+          partyName: party[0] as String,
+          partySymbol: party[1] as String,
+          partyId: int.parse(party[2].toString()),
+          votes: int.parse(party[3].toString()),
+          stateVotes: stateVotes,
+        );
+      }).toList();
+
+
+
+      return AllDataModel(
+        parties: partyList,
+        states: stateList,
+        totalVotes: totalVotes,
+        votingPaused: votingPaused,
+        isVotringActive: votingActive,
+        votingStateTime: startTime,
+        votingEndTime: endTime,
+      );
+    } catch (e) {
+      print('getAllData error: ${e.toString()}');
       throw TransactionFailedException(message: e.toString());
     }
   }

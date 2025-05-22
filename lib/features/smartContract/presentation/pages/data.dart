@@ -13,7 +13,7 @@ class _DataState extends State<Data> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
@@ -22,7 +22,7 @@ class _DataState extends State<Data> {
             tabs: [
               Tab(text: "Add Party"),
               Tab(text: "Add State"),
-              Tab(text: "Add Rep"),
+             
             ],
           ),
         ),

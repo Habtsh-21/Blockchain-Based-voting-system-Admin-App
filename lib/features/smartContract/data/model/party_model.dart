@@ -6,6 +6,7 @@ class PartyModel extends PartyEntity {
     required super.partySymbol,
     required super.partyId,
     super.votes,
+   super.stateVotes,
   });
 
   List<dynamic> toList() {
@@ -17,6 +18,7 @@ class PartyModel extends PartyEntity {
         partyName: list[0],
         partySymbol: list[1],
         partyId: list[2],
-        votes: list[3]);
+        votes: list[3],
+        stateVotes: list[4]);
   }
 }

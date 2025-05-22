@@ -45,8 +45,6 @@ class ContractRepoImpl extends ContractRepository {
     }
   }
 
- 
-
   @override
   ContractData addState(StateEntity stateEntity) async {
     if (await networkInfo.isConnected) {
@@ -87,8 +85,6 @@ class ContractRepoImpl extends ContractRepository {
     }
   }
 
-
-
   @override
   ContractData deleteState(int stateId) async {
     if (await networkInfo.isConnected) {
@@ -125,7 +121,6 @@ class ContractRepoImpl extends ContractRepository {
     }
   }
 
-
   @override
   ContractStateList getState() async {
     if (await networkInfo.isConnected) {
@@ -143,6 +138,32 @@ class ContractRepoImpl extends ContractRepository {
       return Left(OfflineFailure());
     }
   }
+@override
+ContractAllDta getAllData({int attempt = 1}) async {
+  const maxAttempts = 10;
+
+  if (await networkInfo.isConnected) {
+    try {
+      final data = await remoteContractDataSource.getAllData();
+      return Right(data);
+    } catch (e) {
+      if (e is TransactionFailedException) {
+        return Left(TransactionFailedFailure(message: e.message));
+      } else {
+        return Left(UnkownFailure());
+      }
+    }
+  } else {
+    if (attempt < maxAttempts) {
+      await Future.delayed(const Duration(seconds: 3));
+      return await getAllData(attempt: attempt + 1);
+    } else {
+      return Left(OfflineFailure());
+    }
+  }
+}
+
+
 
   @override
   ContractData uploadImage(File pickedFile, String fileName) async {

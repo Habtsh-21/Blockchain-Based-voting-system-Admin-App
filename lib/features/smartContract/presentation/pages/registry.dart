@@ -24,7 +24,7 @@ class _RegistryState extends ConsumerState<Registry> {
             IconButton(
                 onPressed: () {
                   setState(() {
-                    ref.read(contractProvider.notifier).initialize();
+                    ref.read(contractProvider.notifier).fatchAllData();
                   });
                 },
                 icon: const Icon(Icons.refresh))
