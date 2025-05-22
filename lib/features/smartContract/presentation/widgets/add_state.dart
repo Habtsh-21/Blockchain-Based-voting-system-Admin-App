@@ -110,7 +110,8 @@ class _AddStateState extends ConsumerState<AddState> {
                             .addState(nameController.text, id!);
                       }
                     },
-                    text: contractState is StateAddingState
+                    text: contractState is StateAddingState ||
+                            contractState is FileUpoadingState
                         ? const Center(child: CircularProgressIndicator())
                         : const Text(
                             "Submit",

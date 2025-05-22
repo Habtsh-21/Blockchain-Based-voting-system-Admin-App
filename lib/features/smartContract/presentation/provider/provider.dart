@@ -133,9 +133,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     required this.getStateUsecase,
     required this.getRepUsecase,
     required this.uploadimageUsecase,
-  }) : super(ContractInitialState()) {
-    initialize();
-  }
+  }) : super(ContractInitialState());
 
   List<PartyModel>? partyList;
   List<StateModel>? stateList;
@@ -146,6 +144,18 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     partyList = await fatchParties();
     stateList = await fatchStates();
     // repList = await fatchReps();
+  }
+
+  void parties() async {
+    partyList = await fatchParties();
+  }
+
+  void states() async {
+    stateList = await fatchStates();
+  }
+
+  void reps() async {
+    repList = await fatchReps();
   }
 
   Future<void> addParty(

@@ -180,7 +180,7 @@ class _AddRepState extends ConsumerState<AddRepresentative> {
 
                         final timestamp = DateTime.now().microsecondsSinceEpoch;
                         final fileName =
-                            "${nameController.text} - $partyId -$stateId - $timestamp";
+                            "${nameController.text}-$partyId-$stateId-$timestamp";
                         photo = await ref
                             .read(contractProvider.notifier)
                             .uploadImage(_image!, fileName);
@@ -193,12 +193,12 @@ class _AddRepState extends ConsumerState<AddRepresentative> {
                               nameController.text, photo!, partyId, stateId);
                         } else {
                           print('something wrong');
-
                           ref.watch(contractProvider.notifier).resetState();
                         }
                       }
                     },
-                    text: contractState is RepAddingState
+                    text: contractState is RepAddingState ||
+                            contractState is FileUpoadingState
                         ? const Center(child: CircularProgressIndicator())
                         : const Text(
                             "Submit",

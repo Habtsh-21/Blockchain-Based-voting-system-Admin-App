@@ -3,6 +3,7 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quickalert/quickalert.dart';
 
 class StatePage extends ConsumerStatefulWidget {
   const StatePage({super.key});
@@ -12,23 +13,54 @@ class StatePage extends ConsumerStatefulWidget {
 }
 
 class _StatePageState extends ConsumerState<StatePage> {
+  List<StateModel>? stateList;
+  ContractProviderState? _previousState;
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
     ContractProviderState contractState = ref.watch(contractProvider);
-    List<StateModel>? stateList =
-        ref.read(contractProvider.notifier).getStates();
+    stateList = ref.read(contractProvider.notifier).getStates();
+
+    if (_previousState != contractState && contractState is StateDeletedState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          title: 'Success!',
+          textColor: Colors.black,
+          text: 'trxHash:${contractState.txHash}',
+          borderRadius: 0,
+          barrierColor: Colors.black.withOpacity(0.2),
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    } else if (_previousState != contractState &&
+        contractState is ContractFailureState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Error',
+          textColor: Colors.black,
+          text: contractState.message,
+          borderRadius: 0,
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    }
+    _previousState = contractState;
     return Container(
         margin: EdgeInsets.symmetric(
             horizontal: width * 0.05, vertical: height * 0.02),
         child: stateList != null
             ? ListView.builder(
-                itemCount: stateList.length,
+                itemCount: stateList!.length,
                 padding:
                     const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 itemBuilder: (BuildContext context, int index) {
-                  final state = stateList[index];
+                  final state = stateList![index];
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 8),
                     shape: RoundedRectangleBorder(
@@ -64,8 +96,10 @@ class _StatePageState extends ConsumerState<StatePage> {
                   );
                 },
               )
-            : const Center(
-                child: Text('Data is not Loaded. please Refresh it'),
-              ));
+            : contractState is RepFetchingState
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : const Center(child: Text('Data is not Loaded, Refresh it.')));
   }
 }

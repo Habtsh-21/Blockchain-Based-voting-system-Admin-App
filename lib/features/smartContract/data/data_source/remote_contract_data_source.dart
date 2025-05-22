@@ -8,7 +8,6 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:web3dart/web3dart.dart';
 import 'package:web_socket_channel/io.dart';
@@ -17,7 +16,7 @@ const String _rpcUrl =
     'https://eth-sepolia.g.alchemy.com/v2/-ojPUotrULaRUfZmH3MRZTFQ7OH1wB22';
 const String _wsUrl =
     'ws://eth-sepolia.g.alchemy.com/v2/-ojPUotrULaRUfZmH3MRZTFQ7OH1wB22';
-const String contractAddress = "0xEF504cE4D8c5f16Cc9552B77b435B75cb517ccf8";
+const String contractAddress = "0x47aAa3f944C584CFc52FC2b4057Ac54206B5eE2D";
 const String PRIVATE_KEY =
     "9d9a132e6a883f1effe0520f10ccf060c6829c2d9df2f30c7261dd704466fab4";
 

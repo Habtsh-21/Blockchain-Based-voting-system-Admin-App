@@ -23,6 +23,7 @@ class _PartyPageState extends ConsumerState<PartyPage> {
     final width = MediaQuery.of(context).size.width;
     ContractProviderState contractState = ref.watch(contractProvider);
     partyList = ref.read(contractProvider.notifier).getParties();
+
     if (_previousState != contractState && contractState is PartyDeletedState) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         QuickAlert.show(
@@ -122,8 +123,10 @@ class _PartyPageState extends ConsumerState<PartyPage> {
                   );
                 },
               )
-            : const Center(
-                child: Text('Data is not Loaded. please Refresh it'),
-              ));
+            : contractState is PartyFetchingState
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : const Center(child: Text('Data is not Loaded, Refresh it.')));
   }
 }
