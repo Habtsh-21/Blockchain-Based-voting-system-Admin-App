@@ -139,12 +139,12 @@ class ContractRepoImpl extends ContractRepository {
     }
   }
 @override
-ContractAllDta getAllData({int attempt = 1}) async {
+ContractAllDta getAllData(int faydaNo,  {int attempt = 1}) async {
   const maxAttempts = 10;
 
   if (await networkInfo.isConnected) {
     try {
-      final data = await remoteContractDataSource.getAllData();
+      final data = await remoteContractDataSource.getAllData(faydaNo);
       return Right(data);
     } catch (e) {
       if (e is TransactionFailedException) {
@@ -156,7 +156,7 @@ ContractAllDta getAllData({int attempt = 1}) async {
   } else {
     if (attempt < maxAttempts) {
       await Future.delayed(const Duration(seconds: 3));
-      return await getAllData(attempt: attempt + 1);
+      return await getAllData( faydaNo, attempt: attempt + 1);
     } else {
       return Left(OfflineFailure());
     }

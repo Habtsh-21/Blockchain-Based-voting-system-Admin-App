@@ -153,7 +153,7 @@ contract Election {
 
         party.stateVotes[_voterState]++;
         
-        totalVotes++;  // <-- Increment total votes here
+        totalVotes++; 
 
         voters[_voterId] = true;
         emit VoteCast(_voterId, _voterState, _votedPartyId);
@@ -178,6 +178,11 @@ contract Election {
             block.timestamp <= votingEndTime;
     }
 
+   function hasUserVoted(uint256 voterId) public view returns (bool) {
+    return voters[voterId];
+}
+
+
     function timeData() public view returns (bool, uint256, uint256) {
         return (isVotingActive(), votingStartTime, votingEndTime);
     }
@@ -193,7 +198,7 @@ contract Election {
         require(votingPaused, "Not paused");
         votingPaused = false;
     }
-
+   
     function _getAllParties() internal view returns (PartyView[] memory) {
         PartyView[] memory result = new PartyView[](partyIds.length);
         
@@ -237,13 +242,14 @@ contract Election {
         return _getAllStates();
     }
 
-    function getAllData()
+    function getAllData(uint voterId)
         public
         view
         returns (
             State[] memory,
             PartyView[] memory,
             uint256,
+            bool,
             bool,
             bool,
             uint256,
@@ -256,6 +262,7 @@ contract Election {
             totalVotes,
             votingPaused,
             isVotingActive(),
+            hasUserVoted(voterId),
             votingStartTime,
             votingEndTime
         );

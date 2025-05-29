@@ -2,14 +2,14 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/add_state.dart';
 import 'package:flutter/material.dart';
 
-class Data extends StatefulWidget {
-  const Data({super.key});
+class Register extends StatefulWidget {
+  const Register({super.key});
 
   @override
-  State<Data> createState() => _DataState();
+  State<Register> createState() => _RegisterState();
 }
 
-class _DataState extends State<Data> {
+class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -17,12 +17,11 @@ class _DataState extends State<Data> {
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: const Text("Election"),
+          title: const Text("Add Entry"),
           bottom: const TabBar(
             tabs: [
               Tab(text: "Add Party"),
               Tab(text: "Add State"),
-             
             ],
           ),
         ),
@@ -30,7 +29,6 @@ class _DataState extends State<Data> {
           children: [
             AddParty(),
             AddState(),
-           
           ],
         ),
       ),

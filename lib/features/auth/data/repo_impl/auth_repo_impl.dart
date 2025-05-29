@@ -23,7 +23,7 @@ class AuthRepoImplementation extends AuthRepository {
           email: adminEntity.email,
           password: adminEntity.password,
         );
-         await remoteDataSource.logIn(adminModel);
+        await remoteDataSource.logIn(adminModel);
         return const Right(unit);
       } on ServerException {
         return Left(ServerFailure());
@@ -54,6 +54,31 @@ class AuthRepoImplementation extends AuthRepository {
       return const Right(unit);
     } on ServerException {
       return Left(ServerFailure());
+    }
+  }
+
+  @override
+  AdminData usersData({int atmp = 1}) async {
+    int maxAtmp = 10;
+    if (await networkInfo.isConnected) {
+      try {
+        int result = await remoteDataSource.usersData();
+        return Right(result);
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(ServerFailure());
+        }
+      }
+    } else {
+      if (atmp < maxAtmp) {
+        Future.delayed(
+          const Duration(seconds: 3),
+          () => usersData(atmp: atmp + 1),
+        );
+      }
+      return Left(OfflineFailure());
     }
   }
 }

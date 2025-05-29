@@ -6,7 +6,7 @@ class GetAllDataUsecase {
 
   const GetAllDataUsecase({required this.contractRepository});
 
-  ContractAllDta call() {
-    return contractRepository.getAllData();
+  ContractAllDta call(int faydaNo) {
+    return contractRepository.getAllData(faydaNo);
   }
 }

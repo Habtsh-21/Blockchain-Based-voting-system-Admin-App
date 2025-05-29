@@ -7,8 +7,9 @@ class AllDataModel {
   int totalVotes;
   bool votingPaused;
   bool isVotringActive;
-  int votingStateTime;
-  int votingEndTime;
+  bool  hasUserVoted;
+  DateTime? votingStateTime;
+  DateTime? votingEndTime;
 
   AllDataModel(
       {required this.parties,
@@ -16,6 +17,7 @@ class AllDataModel {
       required this.totalVotes,
       required this.votingPaused,
       required this.isVotringActive,
+      required this.hasUserVoted,
       required this.votingStateTime,
       required this.votingEndTime});
 }

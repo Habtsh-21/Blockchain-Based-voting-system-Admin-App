@@ -7,6 +7,7 @@ import 'package:blockchain_based_national_election_admin_app/features/auth/domai
 import 'package:blockchain_based_national_election_admin_app/features/auth/domain/repository/auth_repo.dart';
 import 'package:blockchain_based_national_election_admin_app/features/auth/domain/usecase/loginusecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/auth/domain/usecase/logoutusecase.dart';
+import 'package:blockchain_based_national_election_admin_app/features/auth/domain/usecase/usersdata_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/provider/provider_state.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,44 +47,62 @@ final logOutUsercaseProvider = Provider<LogOutUsecase>(
   },
 );
 
-ProviderState stateChecker(Either either, ProviderState pState) {
-  return either.fold(
-      (failure) => FailureState(message: _mapFailureToMessage(failure)),
-      (r) => pState);
-}
+final usersDataProvider = Provider<UsersdataUsecase>(
+  (ref) {
+    final authRepository = ref.watch(authRepoProvider);
+    return UsersdataUsecase(authRepository: authRepository);
+  },
+);
 
-class AuthNotifier extends StateNotifier<ProviderState> {
+class AuthNotifier extends StateNotifier<AuthProviderState> {
   final LogInUsecase logInUsecase;
   final LogOutUsecase logOutUsecase;
+  final UsersdataUsecase usersDataUsecase;
   AuthNotifier(
-    {required this.logInUsecase, required this.logOutUsecase}
-    )
+      {required this.logInUsecase,
+      required this.logOutUsecase,
+      required this.usersDataUsecase})
       : super(InitialState());
+
+  int totalUsers = 0;
   Future<void> login(String email, String password) async {
     state = LoggingInState();
-    print('1.1');
-    final user =
+
+    final result =
         await logInUsecase(AdminEntity(email: email, password: password));
-    print("1.2");
-    state = stateChecker(user, LoggedInState());
-    print("1.4");
+
+    state = result.fold(
+        (failure) => LogInFailureState(message: _mapFailureToMessage(failure)),
+        (r) => LoggedInState());
   }
 
   Future<void> logout() async {
-    state = LoggingOutState();
+    state = LogingOutState();
     final result = await logOutUsecase();
-    state = stateChecker(result, LoggedOutState());
+    state = result.fold(
+        (failure) => LogoutFailureState(message: _mapFailureToMessage(failure)),
+        (r) => LoggedOutState());
+  }
+
+  Future<void> userData() async {
+    state = UsersdataLoadingState();
+    final result = await usersDataUsecase();
+    state = result.fold(
+        (failure) =>
+            UsersdataFailureState(message: _mapFailureToMessage(failure)), (r) {
+      totalUsers = r;
+      return UsersdataLoadedState();
+    });
   }
 }
 
-
-final providerStateProvider =
-    StateNotifierProvider<AuthNotifier, ProviderState>((ref) {
-      return AuthNotifier(
-        logInUsecase: ref.watch(logInUsecaseProvider),
-        logOutUsecase: ref.watch(logOutUsercaseProvider),
-      );
-    });
+final authStateProvider =
+    StateNotifierProvider<AuthNotifier, AuthProviderState>((ref) {
+  return AuthNotifier(
+      logInUsecase: ref.watch(logInUsecaseProvider),
+      logOutUsecase: ref.watch(logOutUsercaseProvider),
+      usersDataUsecase: ref.watch(usersDataProvider));
+});
 
 String _mapFailureToMessage(Failure failure) {
   switch (failure.runtimeType) {

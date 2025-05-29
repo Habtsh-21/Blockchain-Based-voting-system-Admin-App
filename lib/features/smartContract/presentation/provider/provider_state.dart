@@ -7,79 +7,154 @@ abstract class ContractProviderState extends Equatable {
   List<Object?> get props => [];
 }
 
+// === Base Success & Failure States ===
+
+abstract class SuccessState<T> extends ContractProviderState {
+  final T message;
+  SuccessState({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}
+
+abstract class FailureState<T> extends ContractProviderState {
+  final T message;
+  FailureState({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}
+
+// === Initial State ===
+
 class ContractInitialState extends ContractProviderState {}
 
-class ContractAllDataFatchingState extends ContractProviderState {}
+// === All Data States ===
 
-class ContractAllDataFatchedState extends ContractProviderState {}
+class ContractAllDataFetchingState extends ContractProviderState {}
 
-class DataLoadingState extends ContractProviderState {}
+class ContractAllDataFetchedState extends SuccessState<String> {
+  ContractAllDataFetchedState({required super.message});
+}
 
-class DataLoadedState extends ContractProviderState {}
+class ContractAllDataFailureState extends FailureState<String> {
+  ContractAllDataFailureState({required super.message});
+}
+
+// === Party States ===
 
 class PartyAddingState extends ContractProviderState {}
 
-class PartyAddedState extends ContractProviderState {
-  final String trxHash;
-  PartyAddedState({required this.trxHash});
+class PartyAddedState extends SuccessState<String> {
+  PartyAddedState({required super.message});
+}
+
+class PartyAddFailureState extends FailureState<String> {
+  PartyAddFailureState({required super.message});
 }
 
 class PartyDeletingState extends ContractProviderState {}
 
-class PartyDeletedState extends ContractProviderState {
-  final String txHash;
-  PartyDeletedState({required this.txHash});
+class PartyDeletedState extends SuccessState<String> {
+  PartyDeletedState({required super.message});
+}
+
+class PartyDeleteFailureState extends FailureState<String> {
+  PartyDeleteFailureState({required super.message});
 }
 
 class PartyFetchingState extends ContractProviderState {}
 
 class PartyFetchedState extends ContractProviderState {
-  final List<PartyModel> partiesList;
-  PartyFetchedState({required this.partiesList});
+  final List<PartyModel> parties;
+  PartyFetchedState({required this.parties});
+
+  @override
+  List<Object?> get props => [parties];
 }
+
+class PartyFetchFailureState extends FailureState<String> {
+  PartyFetchFailureState({required super.message});
+}
+
+// === State (Region) States ===
 
 class StateAddingState extends ContractProviderState {}
 
-class StateAddedState extends ContractProviderState {
-  final String trxHash;
-  StateAddedState({required this.trxHash});
+class StateAddedState extends SuccessState<String> {
+  StateAddedState({required super.message});
+}
+
+class StateAddFailureState extends FailureState<String> {
+  StateAddFailureState({required super.message});
 }
 
 class StateDeletingState extends ContractProviderState {}
 
-class StateDeletedState extends ContractProviderState {
-  final String txHash;
-  StateDeletedState({required this.txHash});
+class StateDeletedState extends SuccessState<String> {
+  StateDeletedState({required super.message});
+}
+
+class StateDeleteFailureState extends FailureState<String> {
+  StateDeleteFailureState({required super.message});
 }
 
 class StateFetchingState extends ContractProviderState {}
 
 class StateFetchedState extends ContractProviderState {
-  final List<StateModel> stateList;
-  StateFetchedState({required this.stateList});
+  final List<StateModel> states;
+  StateFetchedState({required this.states});
+
+  @override
+  List<Object?> get props => [states];
 }
 
-class FileUpoadingState extends ContractProviderState {}
-
-class FileUpoadedState extends ContractProviderState {}
-
-class ContractSuccessState extends ContractProviderState {}
-
-class TimeSettingState extends ContractProviderState{}
-
-class TimeSettedState extends ContractProviderState{
-   final String message;
-  TimeSettedState({required this.message});
+class StateFetchFailureState extends FailureState<String> {
+  StateFetchFailureState({required super.message});
 }
 
-class VotePausingState extends ContractProviderState{}
+// === File Upload States ===
 
-class VotePauseExcutedState extends ContractProviderState{
-    final String txHash;
-  VotePauseExcutedState({required this.txHash});
+class FileUploadingState extends ContractProviderState {}
+
+class FileUploadedState extends SuccessState<String> {
+  FileUploadedState({required super.message});
 }
 
-class ContractFailureState extends ContractProviderState {
-  final String message;
-  ContractFailureState({required this.message});
+class FileUploadFailureState extends FailureState<String> {
+  FileUploadFailureState({required super.message});
+}
+
+// === Time Setting States ===
+
+class TimeSettingState extends ContractProviderState {}
+
+class TimeSettedState extends SuccessState<String> {
+  TimeSettedState({required super.message});
+}
+
+class TimeSettingFailureState extends FailureState<String> {
+  TimeSettingFailureState({required super.message});
+}
+
+// === Voting Control States ===
+
+class VotePausingState extends ContractProviderState {}
+
+class VotePausedState extends SuccessState<String> {
+  VotePausedState({required super.message});
+}
+
+class VotePauseFailureState extends FailureState<String> {
+  VotePauseFailureState({required super.message});
+}
+
+// === Generic Fallback States (Optional) ===
+
+class ContractSuccessState extends SuccessState<String> {
+  ContractSuccessState({required super.message});
+}
+
+class ContractFailureState extends FailureState<String> {
+  ContractFailureState({required super.message});
 }

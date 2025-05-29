@@ -11,7 +11,7 @@ abstract class ContractRepository {
   ContractStateList getState();
   ContractData deleteParty(int partyId);
   ContractData deleteState(int stateId);
-  ContractAllDta getAllData();
+  ContractAllDta getAllData(int faydaNo);
   ContractData uploadImage(File pickedFile, String fileName);
   ContractData setTime(int startTime, int endTime);
   ContractData pause(bool pause);

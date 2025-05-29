@@ -18,8 +18,7 @@ class _ControlState extends ConsumerState<Control> {
   DateTime? endTime;
   late Timer _timer;
   bool _isSettingTime = false;
- ContractProviderState? _previousState;
-
+  ContractProviderState? _previousState;
 
   @override
   void initState() {
@@ -103,21 +102,36 @@ class _ControlState extends ConsumerState<Control> {
     DateTime? tempEnd = endTime;
     ContractProviderState contractState = ref.watch(contractProvider);
 
- if (_previousState != contractState && contractState is VotePauseExcutedState) {
+    if (_previousState != contractState && contractState is VotePausedState) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         QuickAlert.show(
           context: context,
           type: QuickAlertType.success,
           title: 'Success!',
           textColor: Colors.black,
-          text: 'trxHash:${contractState.txHash}',
+          text: 'trxHash:${contractState.message}',
           borderRadius: 0,
           barrierColor: Colors.black.withOpacity(0.2),
         );
         ref.read(contractProvider.notifier).resetState();
       });
     }
-      _previousState = contractState;
+    if (_previousState != contractState &&
+        contractState is VotePauseFailureState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'error!',
+          textColor: Colors.black,
+          text: 'trxHash:${contractState.message}',
+          borderRadius: 0,
+          barrierColor: Colors.black.withOpacity(0.2),
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    }
+    _previousState = contractState;
     await showDialog(
       context: context,
       builder: (context) {
@@ -365,6 +379,7 @@ class _ControlState extends ConsumerState<Control> {
                                       : Colors.red,
                               fontWeight: FontWeight.bold,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),

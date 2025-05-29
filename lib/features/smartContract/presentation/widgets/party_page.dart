@@ -1,6 +1,7 @@
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider_state.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/detail_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,7 @@ class PartyPage extends ConsumerStatefulWidget {
 class _PartyPageState extends ConsumerState<PartyPage> {
   List<PartyModel>? partyList;
   ContractProviderState? _previousState;
+  int? currentDeletingParty;
 
   @override
   Widget build(BuildContext context) {
@@ -31,14 +33,14 @@ class _PartyPageState extends ConsumerState<PartyPage> {
           type: QuickAlertType.success,
           title: 'Success!',
           textColor: Colors.black,
-          text: 'trxHash:${contractState.txHash}',
+          text: 'trxHash:${contractState.message}',
           borderRadius: 0,
           barrierColor: Colors.black.withOpacity(0.2),
         );
         ref.read(contractProvider.notifier).resetState();
       });
     } else if (_previousState != contractState &&
-        contractState is ContractFailureState) {
+        contractState is PartyDeleteFailureState) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         QuickAlert.show(
           context: context,
@@ -104,7 +106,7 @@ class _PartyPageState extends ConsumerState<PartyPage> {
                           ),
                         ],
                       ),
-                      trailing: contractState is PartyDeletingState
+                      trailing: contractState is PartyDeletingState && currentDeletingParty == party.partyId
                           ? const SizedBox(
                               width: 24,
                               height: 24,
@@ -114,11 +116,18 @@ class _PartyPageState extends ConsumerState<PartyPage> {
                               icon: const Icon(Icons.delete_forever,
                                   color: Colors.red),
                               onPressed: () async {
+                                currentDeletingParty = party.partyId;
                                 await ref
                                     .read(contractProvider.notifier)
                                     .deleteParty(party.partyId);
                               },
                             ),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailPage(party: party),
+                        ),
+                      ),
                     ),
                   );
                 },

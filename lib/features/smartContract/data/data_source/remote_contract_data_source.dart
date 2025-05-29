@@ -16,7 +16,9 @@ const String _rpcUrl =
     'https://eth-sepolia.g.alchemy.com/v2/-ojPUotrULaRUfZmH3MRZTFQ7OH1wB22';
 const String _wsUrl =
     'ws://eth-sepolia.g.alchemy.com/v2/-ojPUotrULaRUfZmH3MRZTFQ7OH1wB22';
-const String contractAddress = "0x47aAa3f944C584CFc52FC2b4057Ac54206B5eE2D";
+const String contractAddress =
+    "0x248BE004170491254Fa7E3D4bd87979EF5f80855"; //updated contract address
+//  "0x47aAa3f944C584CFc52FC2b4057Ac54206B5eE2D";
 const String PRIVATE_KEY =
     "9d9a132e6a883f1effe0520f10ccf060c6829c2d9df2f30c7261dd704466fab4";
 
@@ -28,7 +30,7 @@ abstract class RemoteContractDataSource {
   Future<List<PartyModel>> getParties();
   Future<List<StateModel>> getState();
   Future<String> uploadImage(File pickedFile, String fileName);
-  Future<AllDataModel> getAllData();
+  Future<AllDataModel> getAllData(int faydaNo);
   Future<String> setTime(int startTime, int endTime);
   Future<String> pause(bool pause);
 }
@@ -44,7 +46,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   late ContractFunction _getStates;
   late ContractFunction _getAllData;
   late ContractFunction _setTime;
-   late ContractFunction _pause;
+  late ContractFunction _pause;
   late ContractFunction _resume;
   late EthereumAddress _contractAddress;
   late ContractAbi _contractAbi;
@@ -78,11 +80,8 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> addParty(PartyModel partyModel) async {
     try {
-      print(1);
       await init();
-      print(2);
-      print(
-          "${partyModel.partyId} ${partyModel.partySymbol}  ${partyModel.partyName}");
+
       _addParty = _contract.function('addParty');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -96,11 +95,9 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
             ],
           ),
           chainId: 11155111);
-      print(3);
-      print('transaction hash --- $transactionHash');
+
       return transactionHash;
     } catch (e) {
-      print(e.toString());
       throw TransactionFailedException(message: e.toString());
     }
   }
@@ -108,9 +105,8 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> addState(StateModel stateModel) async {
     try {
-      print(1);
       await init();
-      print(2);
+
       _addState = _contract.function('addState');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -119,11 +115,9 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
               function: _addState,
               parameters: stateModel.toList()),
           chainId: 11155111);
-      print(3);
-      print('trx:$transactionHash');
+
       return transactionHash;
     } catch (e) {
-      print(e.toString());
       throw TransactionFailedException(message: e.toString());
     }
   }
@@ -131,9 +125,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> deleteParty(int partyId) async {
     try {
-      print('11d');
       await init();
-      print('12d');
       _deleteParty = _contract.function('deleteParty');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -143,7 +135,6 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
               parameters: [BigInt.from(partyId)]),
           chainId: 11155111);
 
-      print('delete: $transactionHash');
       return transactionHash;
     } catch (e) {
       print('error : ${e.toString()}');
@@ -161,7 +152,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
           Transaction.callContract(
               contract: _contract,
               function: _deleteState,
-              parameters: [stateId]),
+              parameters: [BigInt.from(stateId)]),
           chainId: 11155111);
       return transactionHash;
     } catch (e) {
@@ -240,7 +231,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   }
 
   @override
-  Future<AllDataModel> getAllData() async {
+  Future<AllDataModel> getAllData(int faydaNo) async {
     try {
       await init();
 
@@ -248,8 +239,9 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       final result = await _client.call(
         contract: _contract,
         function: _getAllData,
-        params: [],
+        params: [BigInt.from(faydaNo)],
       );
+      print(result);
 
       // Decode each item from result
       final rawStates = result[0] as List;
@@ -257,8 +249,16 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       final totalVotes = int.parse(result[2].toString());
       final votingPaused = result[3] as bool;
       final votingActive = result[4] as bool;
-      final startTime = int.parse(result[5].toString());
-      final endTime = int.parse(result[6].toString());
+      final hasUserVoted = result[5] as bool;
+      final start = int.parse(result[6].toString());
+      final end = int.parse(result[7].toString());
+      DateTime? startTime;
+      DateTime? endTime;
+
+      if (start != 0 && end != 0) {
+        startTime = DateTime.fromMillisecondsSinceEpoch(start * 1000);
+        endTime = DateTime.fromMillisecondsSinceEpoch(end * 1000);
+      }
 
       final stateList = rawStates.map((state) {
         return StateModel(
@@ -295,6 +295,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
         totalVotes: totalVotes,
         votingPaused: votingPaused,
         isVotringActive: votingActive,
+        hasUserVoted: hasUserVoted,
         votingStateTime: startTime,
         votingEndTime: endTime,
       );
@@ -384,7 +385,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
             ),
             chainId: 11155111);
       } else {
-      _resume = _contract.function('resumeVoting');
+        _resume = _contract.function('resumeVoting');
         transactionHash = await _client.sendTransaction(
             _credentials,
             Transaction.callContract(

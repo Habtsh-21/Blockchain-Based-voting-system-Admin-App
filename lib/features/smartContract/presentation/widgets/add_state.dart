@@ -31,14 +31,14 @@ class _AddStateState extends ConsumerState<AddState> {
           type: QuickAlertType.success,
           title: 'Success!',
           textColor: Colors.black,
-          text: 'trxHash:${contractState.trxHash}',
+          text: 'trxHash:${contractState.message}',
           borderRadius: 0,
           barrierColor: Colors.black.withOpacity(0.2),
         );
         ref.read(contractProvider.notifier).resetState();
       });
     } else if (_previousState != contractState &&
-        contractState is ContractFailureState) {
+        contractState is StateAddFailureState) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         QuickAlert.show(
           context: context,
@@ -110,8 +110,7 @@ class _AddStateState extends ConsumerState<AddState> {
                             .addState(nameController.text, id!);
                       }
                     },
-                    text: contractState is StateAddingState ||
-                            contractState is FileUpoadingState
+                    text: contractState is StateAddingState
                         ? const Center(child: CircularProgressIndicator())
                         : const Text(
                             "Submit",

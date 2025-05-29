@@ -1,21 +1,39 @@
 import 'package:equatable/equatable.dart';
 
-abstract class ProviderState extends Equatable {
+abstract class AuthProviderState extends Equatable {
   @override
   List<Object?> get props => throw UnimplementedError();
 }
 
-class InitialState extends ProviderState {}
+abstract class SuccessState extends AuthProviderState {}
 
-class LoggingInState extends ProviderState {}
-
-class LoggedInState extends ProviderState {}
-
-class LoggingOutState extends ProviderState {}
-
-class LoggedOutState extends ProviderState {}
-
-class FailureState extends ProviderState {
+abstract class FailureState extends AuthProviderState {
   final String message;
   FailureState({required this.message});
+}
+
+class InitialState extends AuthProviderState {}
+
+class LoggingInState extends AuthProviderState {}
+
+class LoggedInState extends SuccessState {}
+
+class LogInFailureState extends FailureState {
+  LogInFailureState({required super.message});
+}
+
+class LogingOutState extends AuthProviderState {}
+
+class LoggedOutState extends SuccessState {}
+
+class LogoutFailureState extends FailureState {
+  LogoutFailureState({required super.message});
+}
+
+class UsersdataLoadingState extends AuthProviderState {}
+
+class UsersdataLoadedState extends SuccessState {}
+
+class UsersdataFailureState extends FailureState {
+  UsersdataFailureState({required super.message});
 }

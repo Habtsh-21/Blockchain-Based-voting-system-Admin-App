@@ -140,13 +140,14 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
 
   List<PartyModel>? partyList;
   List<StateModel>? stateList;
-  int totalVote = 0;
+  int _totalVote = 0;
   bool _isVotingActive = false;
   bool _isVotingPaused = false;
+  bool _hasUserVoted = false;
   int _totalNoOfParties = 0;
   int _totalNoOfStates = 0;
-  int _startTime = 0;
-  int _endTime = 0;
+  DateTime? _startTime;
+  DateTime? _endTime;
 
   String? fileUrl;
   int counter = 0;
@@ -170,8 +171,8 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     final result = await addPartyUsecase(PartyEntity(
         partyName: partyName, partySymbol: partySymbol, partyId: partyId));
     state = result.fold(
-        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
-      return PartyAddedState(trxHash: r);
+        (l) => PartyAddFailureState(message: _mapFailureToMessage(l)), (r) {
+      return PartyAddedState(message: r);
     });
     Future.delayed(const Duration(seconds: 2), () => resetState());
   }
@@ -182,8 +183,8 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     final result = await addStateUsecase(
         StateEntity(stateName: stateName, stateId: stateId));
     state = result.fold(
-        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
-      return StateAddedState(trxHash: r);
+        (l) => StateAddFailureState(message: _mapFailureToMessage(l)), (r) {
+      return StateAddedState(message: r);
     });
     Future.delayed(const Duration(seconds: 2), () => resetState());
   }
@@ -193,10 +194,10 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
 
     final result = await deletePartyUsecase(partyId);
     state = result.fold(
-        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
-      return PartyDeletedState(txHash: r);
+        (l) => PartyDeleteFailureState(message: _mapFailureToMessage(l)), (r) {
+      return PartyDeletedState(message: r);
     });
-    Future.delayed(const Duration(seconds: 2), () => resetState());
+    Future.delayed(const Duration(seconds: 3), () => resetState());
   }
 
   Future<void> deleteState(int stateId) async {
@@ -204,23 +205,23 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
 
     final result = await deleteStateUsecase(stateId);
     state = result.fold(
-        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
-      return StateDeletedState(txHash: r);
+        (l) => StateDeleteFailureState(message: _mapFailureToMessage(l)), (r) {
+      return StateDeletedState(message: r);
     });
-    Future.delayed(const Duration(seconds: 2), () => resetState());
+    Future.delayed(const Duration(seconds: 3), () => resetState());
   }
 
   Future<List<PartyModel>?> fatchParties() async {
     state = PartyFetchingState();
     final result = await getPartyUsecase();
     state = result.fold((l) {
-      return ContractFailureState(message: _mapFailureToMessage(l));
+      return PartyFetchFailureState(message: _mapFailureToMessage(l));
     }, (r) {
       partyList = r;
-      return PartyFetchedState(partiesList: r);
+      return PartyFetchedState(parties: r);
     });
+    Future.delayed(const Duration(seconds: 3), () => resetState());
 
-    Future.delayed(const Duration(seconds: 2), () => resetState());
     return partyList;
   }
 
@@ -229,42 +230,46 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
 
     final result = await getStateUsecase();
     state = result.fold(
-        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+        (l) => StateFetchFailureState(message: _mapFailureToMessage(l)), (r) {
       stateList = r;
-      return StateFetchedState(stateList: r);
+      return StateFetchedState(states: r);
     });
-    Future.delayed(const Duration(seconds: 2), () => resetState());
+    Future.delayed(const Duration(seconds: 3), () => resetState());
     return stateList;
   }
 
   Future<AllDataModel?> fatchAllData() async {
     AllDataModel? allDataModel;
-    state = ContractAllDataFatchingState();
-    final result = await getAllDataUsecase();
+    state = ContractAllDataFetchingState();
+    final result = await getAllDataUsecase(
+        100); // we dont have voting feature in admin app
     state = result.fold(
-        (l) => ContractFailureState(message: _mapFailureToMessage(l)), (r) {
+        (l) => ContractAllDataFailureState(message: _mapFailureToMessage(l)),
+        (r) {
       allDataModel = r;
       partyList = r.parties;
       stateList = r.states;
+      _totalVote = r.totalVotes;
       _totalNoOfParties = partyList != null ? partyList!.length : 0;
       _totalNoOfStates = stateList != null ? stateList!.length : 0;
       _isVotingActive = r.isVotringActive;
       _isVotingPaused = r.votingPaused;
+      _hasUserVoted = r.hasUserVoted;
       _startTime = r.votingStateTime;
       _endTime = r.votingEndTime;
-      return ContractAllDataFatchedState();
+      return ContractAllDataFetchedState(message: 'success');
     });
     return allDataModel;
   }
 
   Future<String?> uploadImage(File pickedFile, String fileName) async {
-    state = FileUpoadingState();
+    state = FileUploadingState();
     final result = await uploadimageUsecase(pickedFile, fileName);
     state = result.fold(
-      (l) => ContractFailureState(message: _mapFailureToMessage(l)),
+      (l) => FileUploadFailureState(message: _mapFailureToMessage(l)),
       (r) {
         fileUrl = r;
-        return FileUpoadedState();
+        return FileUploadedState(message: 'success');
       },
     );
     Future.delayed(const Duration(seconds: 2), () => resetState());
@@ -288,7 +293,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
   }
 
   int getTotalVote() {
-    return totalVote;
+    return _totalVote;
   }
 
   bool isVotingActive() {
@@ -299,28 +304,28 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     return _isVotingPaused;
   }
 
+  bool hasUserVoted() {
+    return _hasUserVoted;
+  }
+
   Future<void> pause(bool pause) async {
     state = VotePausingState();
     final result = await pauseUsecase(pause);
     state = result.fold(
-      (l) => ContractFailureState(message: _mapFailureToMessage(l)),
+      (l) => VotePauseFailureState(message: _mapFailureToMessage(l)),
       (r) {
         fileUrl = r;
-        return VotePauseExcutedState(txHash: r);
+        return VotePausedState(message: r);
       },
     );
   }
 
   DateTime? startTime() {
-    if (_startTime == 0) return null;
-    DateTime start = DateTime.fromMillisecondsSinceEpoch(_startTime * 1000);
-    return start;
+    return _startTime;
   }
 
   DateTime? endTime() {
-    if (_endTime == 0) return null;
-    DateTime end = DateTime.fromMillisecondsSinceEpoch(_endTime * 1000);
-    return end;
+    return _endTime;
   }
 
   Future<void> setTime(DateTime startTime, DateTime endTime) async {
@@ -329,7 +334,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     int endTimeInSeconds = endTime.millisecondsSinceEpoch ~/ 1000;
     final result = await setTimeUsecase(startTimeInSeconds, endTimeInSeconds);
     state = result.fold(
-      (l) => ContractFailureState(message: _mapFailureToMessage(l)),
+      (l) => TimeSettingFailureState(message: _mapFailureToMessage(l)),
       (r) {
         fileUrl = r;
         return TimeSettedState(message: r);

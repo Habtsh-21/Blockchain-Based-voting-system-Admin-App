@@ -15,6 +15,7 @@ class StatePage extends ConsumerStatefulWidget {
 class _StatePageState extends ConsumerState<StatePage> {
   List<StateModel>? stateList;
   ContractProviderState? _previousState;
+  int? currentDeletingState;
 
   @override
   Widget build(BuildContext context) {
@@ -30,14 +31,14 @@ class _StatePageState extends ConsumerState<StatePage> {
           type: QuickAlertType.success,
           title: 'Success!',
           textColor: Colors.black,
-          text: 'trxHash:${contractState.txHash}',
+          text: 'trxHash:${contractState.message}',
           borderRadius: 0,
           barrierColor: Colors.black.withOpacity(0.2),
         );
         ref.read(contractProvider.notifier).resetState();
       });
     } else if (_previousState != contractState &&
-        contractState is ContractFailureState) {
+        contractState is StateDeleteFailureState) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         QuickAlert.show(
           context: context,
@@ -77,7 +78,7 @@ class _StatePageState extends ConsumerState<StatePage> {
                         ),
                       ),
                       subtitle: Text("ID: ${state.stateId}"),
-                      trailing: contractState is PartyDeletingState
+                      trailing: contractState is StateDeletingState && currentDeletingState == state.stateId
                           ? const SizedBox(
                               width: 24,
                               height: 24,
@@ -87,9 +88,10 @@ class _StatePageState extends ConsumerState<StatePage> {
                               icon: const Icon(Icons.delete_forever,
                                   color: Colors.red),
                               onPressed: () async {
+                                currentDeletingState = state.stateId;
                                 await ref
                                     .read(contractProvider.notifier)
-                                    .deleteParty(state.stateId);
+                                    .deleteState(state.stateId);
                               },
                             ),
                     ),

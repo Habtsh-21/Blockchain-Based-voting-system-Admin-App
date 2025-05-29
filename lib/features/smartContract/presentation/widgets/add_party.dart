@@ -56,14 +56,14 @@ class _AddPartyState extends ConsumerState<AddParty> {
           type: QuickAlertType.success,
           title: 'Success!',
           textColor: Colors.black,
-          text: 'trxHash:${contractState.trxHash}',
+          text: 'trxHash:${contractState.message}',
           borderRadius: 0,
           barrierColor: Colors.black.withOpacity(0.2),
         );
         ref.read(contractProvider.notifier).resetState();
       });
     } else if (_previousState != contractState &&
-        contractState is ContractFailureState) {
+        contractState is PartyAddFailureState) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         QuickAlert.show(
           context: context,
@@ -158,7 +158,6 @@ class _AddPartyState extends ConsumerState<AddParty> {
                   GradientButton(
                     onPress: () async {
                       if (_formKey.currentState!.validate()) {
-                        print('a1');
                         int? id = int.tryParse(idController.text);
                         if (_image == null) return;
                         final timestamp = DateTime.now().microsecondsSinceEpoch;
@@ -167,16 +166,13 @@ class _AddPartyState extends ConsumerState<AddParty> {
                         symbol = await ref
                             .read(contractProvider.notifier)
                             .uploadImage(_image!, fileName);
-                        print('a2');
-                        print(symbol);
+                      
                         if (symbol != null && id != null) {
                           await ref
                               .read(contractProvider.notifier)
                               .addParty(nameController.text, symbol!, id);
 
-                          print('after after');
                         } else {
-                          print('something wrong');
 
                           ref
                               .watch(contractProvider.notifier)
@@ -185,7 +181,7 @@ class _AddPartyState extends ConsumerState<AddParty> {
                       }
                     },
                     text: contractState is PartyAddingState ||
-                            contractState is FileUpoadingState
+                            contractState is FileUploadingState
                         ? const Center(
                             child: Center(
                                 child: CircularProgressIndicator(
@@ -201,22 +197,7 @@ class _AddPartyState extends ConsumerState<AddParty> {
                           ),
                   ),
                   SizedBox(height: height * 0.02),
-                  if (contractState is ContractFailureState)
-                    Text(
-                      contractState.message,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 12,
-                      ),
-                    ),
-                  if (contractState is PartyAddedState)
-                    const Text(
-                      'Party Added successfully',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 12,
-                      ),
-                    )
+                
                 ],
               ))),
     );

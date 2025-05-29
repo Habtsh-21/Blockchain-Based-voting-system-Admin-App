@@ -1,9 +1,13 @@
+import 'dart:async';
+
+import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/provider/provider.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/box_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -15,14 +19,43 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   List<PartyModel>? partyList;
   List<StateModel>? stateList;
+    late String _currentTime;
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentTime = _getFormattedTime();
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
+      setState(() {
+        _currentTime = _getFormattedTime();
+      });
+    });
+  }
+
+  String _getFormattedTime() {
+    final now = DateTime.now();
+    return DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    //  init();
+    final totalUser = ref.read(authStateProvider.notifier).totalUsers;
+    int noOfParties = ref.read(contractProvider.notifier).getTotalNoOfParties();
+    int noOfStates = ref.read(contractProvider.notifier).getTotalNoOfStates();
+    int totalVotes = ref.read(contractProvider.notifier).getTotalVote();
+
     return Scaffold(
       appBar:
-          AppBar(centerTitle: true, title: const Text('DASHBOARD'), actions: [
+          AppBar(
+            centerTitle: true, title: const Text('DASHBOARD'), actions: [
         Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(50)),
@@ -31,21 +64,25 @@ class _HomePageState extends ConsumerState<HomePage> {
               fit: BoxFit.contain,
             ))
       ]),
-      drawer: const Drawer(),
+      drawer: buildDrawer(
+        onLogout: () {
+          ref.read(authStateProvider.notifier).logout();
+        },
+      ),
       body: ListView(
         padding: EdgeInsets.symmetric(
           horizontal: width * 0.05,
         ),
         physics: const ClampingScrollPhysics(),
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+           Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: SizedBox(
               width: double.infinity,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     "Hello,Admin",
                     style: TextStyle(
                         color: Colors.black,
@@ -53,8 +90,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                         fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    "Jan 12,2025",
-                    style: TextStyle(
+                    _currentTime,
+                    style: const TextStyle(
                         color: Color.fromARGB(255, 136, 135, 135),
                         fontSize: 18,
                         fontWeight: FontWeight.w400),
@@ -80,146 +117,78 @@ class _HomePageState extends ConsumerState<HomePage> {
               mainAxisSpacing: 20,
               crossAxisSpacing: 20,
               padding: const EdgeInsets.all(8),
-              children:  [
-                const Box1(
+              children: [
+                Box1(
                     iconData: Icons.people_sharp,
-                    amount: 12000000,
+                    amount: totalUser,
                     text: 'VOTER'),
                 Box1(
                     iconData: Icons.group_work_outlined,
-                    amount: ref.read(contractProvider.notifier).getTotalNoOfParties(),
+                    amount: noOfParties,
                     text: 'PARTIES'),
-                Box1(iconData: Icons.countertops, amount: ref.read(contractProvider.notifier).getTotalNoOfStates(), text: 'STATES'),
+                Box1(
+                    iconData: Icons.countertops,
+                    amount: noOfStates,
+                    text: 'STATES'),
                 Box1(
                     iconData: Icons.person,
-                    amount: ref.read(contractProvider.notifier).getTotalVote(),
-                    text: 'Total Votes'),
+                    amount: totalVotes,
+                    text: 'TOTAL VOTES'),
               ],
             ),
           ),
-          // Container(
-          //     padding: const EdgeInsets.all(8),
-          //     decoration: BoxDecoration(boxShadow: [
-          //       BoxShadow(
-          //         color: Colors.grey.withOpacity(0.5),
-          //         spreadRadius: 2,
-          //         blurRadius: 5,
-          //         offset: const Offset(0, 3),
-          //       ),
-          //     ]),
-          //     child: Column(
-          //       children: [
-          //         Row(
-          //           mainAxisAlignment: MainAxisAlignment.start,
-          //           children: [
-          //             const Text(
-          //               'Parties',
-          //               style: TextStyle(
-          //                 fontSize: 20,
-          //                 fontWeight: FontWeight.bold,
-          //               ),
-          //             ),
-          //             MaterialButton(
-          //               onPressed: () {},
-          //               shape: const BeveledRectangleBorder(
-          //                   side: BorderSide(width: 0.2)),
-          //               child: const Text('Add New'),
-          //             )
-          //           ],
-          //         ),
-          //         PartyDataTable(partyList: partyList),
-          //         const SizedBox(
-          //           height: 16,
-          //         ),
-          //         TextButton(
-          //             onPressed: () {},
-          //             child: const Text('see all',
-          //                 style: TextStyle(
-          //                     fontWeight: FontWeight.bold, color: Colors.red))),
-          //       ],
-          //     )),
-          // Container(
-          //     padding: const EdgeInsets.all(8),
-          //     decoration: BoxDecoration(boxShadow: [
-          //       BoxShadow(
-          //         color: Colors.grey.withOpacity(0.5),
-          //         spreadRadius: 2,
-          //         blurRadius: 5,
-          //         offset: const Offset(0, 3),
-          //       ),
-          //     ]),
-          //     child: Column(
-          //       children: [
-          //         Row(
-          //           mainAxisAlignment: MainAxisAlignment.start,
-          //           children: [
-          //             const Text(
-          //               'States',
-          //               style: TextStyle(
-          //                 fontSize: 20,
-          //                 fontWeight: FontWeight.bold,
-          //               ),
-          //             ),
-          //             MaterialButton(
-          //               onPressed: () {},
-          //               shape: const BeveledRectangleBorder(
-          //                   side: BorderSide(width: 0.2)),
-          //               child: const Text('Add New'),
-          //             )
-          //           ],
-          //         ),
-          //         PartyDataTable(partyList: partyList),
-          //          const SizedBox(
-          //     height: 16,
-          //   ),
-          //   TextButton(
-          //       onPressed: () {},
-          //       child: const Text('see all',
-          //           style: TextStyle(
-          //               fontWeight: FontWeight.bold, color: Colors.red))),
-          //       ],
-          //     )),
-          //      Container(
-          //     padding: const EdgeInsets.all(8),
-          //     decoration: BoxDecoration(boxShadow: [
-          //       BoxShadow(
-          //         color: Colors.grey.withOpacity(0.5),
-          //         spreadRadius: 2,
-          //         blurRadius: 5,
-          //         offset: const Offset(0, 3),
-          //       ),
-          //     ]),
-          //     child: Column(
-          //       children: [
-          //         Row(
-          //           mainAxisAlignment: MainAxisAlignment.start,
-          //           children: [
-          //             const Text(
-          //               'Representatives',
-          //               style: TextStyle(
-          //                 fontSize: 20,
-          //                 fontWeight: FontWeight.bold,
-          //               ),
-          //             ),
-          //             MaterialButton(
-          //               onPressed: () {},
-          //               shape: const BeveledRectangleBorder(
-          //                   side: BorderSide(width: 0.2)),
-          //               child: const Text('Add New'),
-          //             )
-          //           ],
-          //         ),
-          //         PartyDataTable(partyList: partyList),
-          //          const SizedBox(
-          //     height: 16,
-          //   ),
-          //   TextButton(
-          //       onPressed: () {},
-          //       child: const Text('see all',
-          //           style: TextStyle(
-          //               fontWeight: FontWeight.bold, color: Colors.red))),
-          //       ],
-          //     )),
+        ],
+      ),
+    );
+  }
+
+  Drawer buildDrawer({
+    required VoidCallback onLogout,
+  }) {
+    return Drawer(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.zero,
+          bottomRight: Radius.zero,
+        ),
+      ),
+      child: Column(
+        children: [
+          const UserAccountsDrawerHeader(
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 153, 11, 134),
+            ),
+            accountName: Row(
+              children: [
+                Text(
+                  "Admin",
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(width: 6),
+                Icon(
+                  Icons.add_moderator_outlined,
+                  color: Colors.greenAccent,
+                  size: 18,
+                )
+              ],
+            ),
+            accountEmail: Text(''),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, size: 40, color: Colors.deepPurple),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text("Logout"),
+            onTap: onLogout,
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text("About App"),
+            onTap: () {},
+          ),
         ],
       ),
     );

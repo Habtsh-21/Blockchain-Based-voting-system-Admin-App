@@ -5,7 +5,6 @@ import 'package:blockchain_based_national_election_admin_app/core/widgets/gradie
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -24,7 +23,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
-    final pState = ref.watch(providerStateProvider);
+    final pState = ref.watch(authStateProvider);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -133,11 +132,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     ),
                               onPress: () async {
                                 if (_formKey.currentState!.validate()) {
-                                  
-                                  ref
-                                        .read(providerStateProvider.notifier)
-                                        .login(_emailController.text, _passwordController.text);
-                                 
+                                  ref.read(authStateProvider.notifier).login(
+                                      _emailController.text,
+                                      _passwordController.text);
                                 }
                               },
                             ),
