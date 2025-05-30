@@ -15,13 +15,20 @@ class RemoteDataSourceImpl extends RemoteDataSource {
     print('Trying login with: ${adminModel.email}/${adminModel.password}');
 
     try {
+      final adminCheck = await supabase
+          .from('admins')
+          .select()
+          .eq('email', adminModel.email)
+          .maybeSingle();
+
+      if (adminCheck == null) {
+        throw TransactionFailedException(message: 'Only admins can login');
+      }
+
       final response = await supabase.auth.signInWithPassword(
           email: adminModel.email, password: adminModel.password);
       if (response.user == null) {
         throw ServerException();
-      }
-      if (response.user != null) {
-        print("logged in man");
       }
     } on AuthException catch (e) {
       print('auth exception: code=${e.code}, message=${e.message}');
@@ -37,11 +44,11 @@ class RemoteDataSourceImpl extends RemoteDataSource {
       } else if (message.contains('too many requests')) {
         throw TooManyRequestsException();
       } else {
-        throw ServerException();
+        throw TransactionFailedException(message: e.toString());
       }
     } catch (e) {
       print('Other error: $e');
-      throw ServerException();
+      throw TransactionFailedException(message: e.toString());
     }
   }
 
@@ -68,3 +75,25 @@ class RemoteDataSourceImpl extends RemoteDataSource {
     }
   }
 }
+
+
+
+
+// -- Create the admin user
+// INSERT INTO auth.users (
+//   id,
+//   email,
+//   encrypted_password,
+//   raw_user_meta_data,
+//   created_at,
+//   updated_at,
+//   email_confirmed_at
+// ) VALUES (
+//   gen_random_uuid(), -- Generates a new UUID
+//   'admin@example.com', -- Change to desired email
+//   crypt('sec123', gen_salt('bf')), -- Password will be bcrypt hashed
+//   '{"role":"admin","is_admin":true}', -- Sets admin metadata
+//   now(),
+//   now(),
+//   now() -- Auto-confirms email
+// );

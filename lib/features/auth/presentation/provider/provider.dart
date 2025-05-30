@@ -122,6 +122,8 @@ String _mapFailureToMessage(Failure failure) {
       return NO_USER_FAILURE_MESSAGE;
     case const (TooManyRequestsFailure):
       return TOO_MANY_REQUESTS_FAILURE_MESSAGE;
+    case const (TransactionFailedFailure):
+      return (failure as TransactionFailedFailure).message;
     case const (WrongPasswordFailure):
       return WRONG_PASSWORD_FAILURE_MESSAGE;
     default:

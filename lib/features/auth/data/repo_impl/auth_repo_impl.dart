@@ -41,6 +41,12 @@ class AuthRepoImplementation extends AuthRepository {
         return Left(OperationNotAllowedFailure());
       } on TooManyRequestsException {
         return Left(TooManyRequestsFailure());
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else{
+           return Left(ServerFailure());
+        }
       }
     } else {
       return Left(OfflineFailure());

@@ -139,7 +139,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               },
                             ),
                             SizedBox(height: height * 0.02),
-                            if (pState is FailureState)
+                            if (pState is LogInFailureState)
                               Text(
                                 pState.message,
                                 style: const TextStyle(
