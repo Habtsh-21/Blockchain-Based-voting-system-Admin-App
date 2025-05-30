@@ -21,34 +21,37 @@ class RemoteDataSourceImpl extends RemoteDataSource {
           .eq('email', adminModel.email)
           .maybeSingle();
 
+      print('Admin check result: $adminCheck');
+
       if (adminCheck == null) {
         throw TransactionFailedException(message: 'Only admins can login');
       }
 
       final response = await supabase.auth.signInWithPassword(
-          email: adminModel.email, password: adminModel.password);
+        email: adminModel.email,
+        password: adminModel.password,
+      );
+
       if (response.user == null) {
-        throw ServerException();
+        throw TransactionFailedException(message: 'Login failed, try again');
       }
     } on AuthException catch (e) {
-      print('auth exception: code=${e.code}, message=${e.message}');
       final message = e.message.toLowerCase();
-      if (message.contains('invalid login credentials')) {
-        throw WrongPasswordException();
-      } else if (message.contains('invalid email')) {
-        throw InvalidEmailException();
-      } else if (message.contains('user not found')) {
-        throw UserNotFoundException();
-      } else if (message.contains('signups not allowed')) {
-        throw OperationNotAllowedException();
+      if (message.contains('invalid login credentials') ||
+          message.contains('user not found')) {
+        throw TransactionFailedException(
+            message: 'Incorrect email or password');
       } else if (message.contains('too many requests')) {
-        throw TooManyRequestsException();
+        throw TransactionFailedException(
+            message: 'Too many attempts, try later');
       } else {
-        throw TransactionFailedException(message: e.toString());
+        throw TransactionFailedException(message: 'Login error: ${e.message}');
       }
+    } on TransactionFailedException {
+      rethrow;
     } catch (e) {
-      print('Other error: $e');
-      throw TransactionFailedException(message: e.toString());
+      print('Unexpected error: $e');
+      throw TransactionFailedException(message: 'Unexpected error occurred');
     }
   }
 
