@@ -241,8 +241,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
   Future<AllDataModel?> fatchAllData() async {
     AllDataModel? allDataModel;
     state = ContractAllDataFetchingState();
-    final result = await getAllDataUsecase(
-        100); // we dont have voting feature in admin app
+    final result = await getAllDataUsecase(); 
     state = result.fold(
         (l) => ContractAllDataFailureState(message: _mapFailureToMessage(l)),
         (r) {

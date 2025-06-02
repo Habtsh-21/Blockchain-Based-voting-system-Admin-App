@@ -149,6 +149,18 @@ class VotePauseFailureState extends FailureState<String> {
   VotePauseFailureState({required super.message});
 }
 
+
+class VoteResumingState extends ContractProviderState {}
+
+class VoteResumedState extends SuccessState<String> {
+  VoteResumedState({required super.message});
+}
+
+class VoteResumeFailureState extends FailureState<String> {
+  VoteResumeFailureState({required super.message});
+}
+
+
 // === Generic Fallback States (Optional) ===
 
 class ContractSuccessState extends SuccessState<String> {

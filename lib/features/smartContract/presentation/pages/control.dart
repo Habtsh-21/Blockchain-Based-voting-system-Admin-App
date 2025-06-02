@@ -253,6 +253,37 @@ class _ControlState extends ConsumerState<Control> {
     ContractProviderState contractState = ref.watch(contractProvider);
     bool currentState = ref.read(contractProvider.notifier).isVotingPaused();
 
+    if (_previousState != contractState &&
+        (contractState is TimeSettedState ||
+            contractState is VotePausedState ||
+            contractState is VoteResumedState)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          title: 'Success!',
+          textColor: Colors.black,
+          borderRadius: 0,
+          barrierColor: Colors.black.withOpacity(0.2),
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    } else if (_previousState != contractState &&
+        (contractState is PartyAddFailureState ||
+            contractState is VotePauseFailureState ||
+            contractState is VoteResumeFailureState)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Error',
+          textColor: Colors.black,
+          borderRadius: 0,
+        );
+        ref.read(contractProvider.notifier).resetState();
+      });
+    }
+    _previousState = contractState;
     return Scaffold(
       appBar: AppBar(
         title: const Text("Election Control"),
@@ -367,7 +398,7 @@ class _ControlState extends ConsumerState<Control> {
                             isVoting
                                 ? "Voting in Progress"
                                 : startTime == null || endTime == null
-                                    ? "Please set both start and end times"
+                                    ? "Please set start and end times"
                                     : hasNotStarted
                                         ? "Voting will start soon"
                                         : "Voting has ended",
@@ -415,7 +446,7 @@ class _ControlState extends ConsumerState<Control> {
                                   },
                                   color:
                                       currentState ? Colors.green : Colors.red,
-                                  child: contractState is VotePausingState
+                                  child: (contractState is VotePausingState ||contractState is VoteResumingState)
                                       ? const Center(
                                           child: CircularProgressIndicator(),
                                         )
