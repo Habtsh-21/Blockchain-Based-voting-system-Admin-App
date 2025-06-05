@@ -149,7 +149,6 @@ class VotePauseFailureState extends FailureState<String> {
   VotePauseFailureState({required super.message});
 }
 
-
 class VoteResumingState extends ContractProviderState {}
 
 class VoteResumedState extends SuccessState<String> {
@@ -158,6 +157,17 @@ class VoteResumedState extends SuccessState<String> {
 
 class VoteResumeFailureState extends FailureState<String> {
   VoteResumeFailureState({required super.message});
+}
+
+
+class TransferingOwnershipState extends ContractProviderState {}
+
+class OwnershipTransferedState extends SuccessState<String> {
+  OwnershipTransferedState({required super.message});
+}
+
+class OwnershipTransferFailureState extends FailureState<String> {
+  OwnershipTransferFailureState({required super.message});
 }
 
 

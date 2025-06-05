@@ -21,7 +21,7 @@ const String contractAddress = "0x4F51C80508207Dc57b1Df9b51A96f4C7a8756B8c";
 // "0x248BE004170491254Fa7E3D4bd87979EF5f80855"; //updated contract address
 //  "0x47aAa3f944C584CFc52FC2b4057Ac54206B5eE2D";
 const String PRIVATE_KEY =
-    "4398d3ac1be44cbc929ee7bf64d203d9f4f2e3f6763911ee8d58fdbddca02883";
+    "9d9a132e6a883f1effe0520f10ccf060c6829c2d9df2f30c7261dd704466fab4";
 
 abstract class RemoteContractDataSource {
   Future<String> addParty(PartyModel partyModel);
@@ -33,6 +33,7 @@ abstract class RemoteContractDataSource {
   Future<String> uploadImage(File pickedFile, String fileName);
   Future<AllDataModel> getAllData();
   Future<String> setTime(int startTime, int endTime);
+  Future<String> transferOwnership(String newAddress);
   Future<String> pause(bool pause);
 }
 
@@ -47,6 +48,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   late ContractFunction _getStates;
   late ContractFunction _getAllData;
   late ContractFunction _setTime;
+  late ContractFunction _transferOwnership;
   late ContractFunction _pause;
   late ContractFunction _resume;
   late EthereumAddress _contractAddress;
@@ -138,7 +140,6 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
 
       return transactionHash;
     } catch (e) {
-      print('error : ${e.toString()}');
       throw TransactionFailedException(message: e.toString());
     }
   }
@@ -157,7 +158,6 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
           chainId: 11155111);
       return transactionHash;
     } catch (e) {
-      print(e.toString());
       throw TransactionFailedException(message: e.toString());
     }
   }
@@ -165,9 +165,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<List<PartyModel>> getParties() async {
     try {
-      print(1);
       await init();
-      print(2);
       _getParties = _contract.function('getAllParties');
       final result = await _client.call(
         contract: _contract,
@@ -199,7 +197,6 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       }).toList();
       return partyList;
     } catch (e) {
-      print('party error:   ${e.toString()}');
       throw TransactionFailedException(message: e.toString());
     }
   }
@@ -226,7 +223,6 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
 
       return stateList;
     } catch (e) {
-      print('state error:   ${e.toString()}');
       throw TransactionFailedException(message: e.toString());
     }
   }
@@ -242,12 +238,11 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
         function: _getAllData,
         params: ['0x000000000000000000000'],
       );
-      print(result);
 
       // Decode each item from result
       final rawStates = result[0] as List;
       final rawParties = result[1] as List;
-      final totalVotes = int.parse(result[2].toString());
+      int totalVotes = 0;
       final votingPaused = result[3] as bool;
       final votingActive = result[4] as bool;
       final hasUserVoted = result[5] as bool;
@@ -269,6 +264,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       }).toList();
 
       final partyList = rawParties.map((party) {
+        int totalPartyVote = 0;
         Map<int, int> stateVotes = {};
         List<List<int>> stateVoteList = (party[4] as List)
             .map((e) => [
@@ -279,13 +275,15 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
 
         for (List<int> state in stateVoteList) {
           stateVotes[state[0]] = state[1];
+          totalPartyVote += state[1];
+          totalVotes += state[1];
         }
 
         return PartyModel(
           partyName: party[0] as String,
           partySymbol: party[1] as String,
           partyId: int.parse(party[2].toString()),
-          votes: int.parse(party[3].toString()),
+          votes: totalPartyVote,
           stateVotes: stateVotes,
         );
       }).toList();
@@ -301,15 +299,14 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
         votingEndTime: endTime,
       );
     } catch (e) {
-      print('getAllData error: ${e.toString()}');
       throw TransactionFailedException(message: e.toString());
     }
   }
 
+  @override
   Future<String> setTime(int startTime, int endTime) async {
     try {
       await init();
-
       _setTime = _contract.function('setVotingTimes');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -319,11 +316,31 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
             parameters: [BigInt.from(startTime), BigInt.from(endTime)],
           ),
           chainId: 11155111);
-      print(3);
       print('transaction hash --- $transactionHash');
       return transactionHash;
     } catch (e) {
-      print('setTime error:   ${e.toString()}');
+      throw TransactionFailedException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<String> transferOwnership(String newAddress) async {
+    try {
+      await init();
+      _transferOwnership = _contract.function('transferOwnership');
+      final newOwner = EthereumAddress.fromHex(newAddress);
+
+      final transactionHash = await _client.sendTransaction(
+          _credentials,
+          Transaction.callContract(
+            contract: _contract,
+            function: _transferOwnership,
+            parameters: [newOwner],
+          ),
+          chainId: 11155111);
+      print('transaction hash --- $transactionHash');
+      return transactionHash;
+    } catch (e) {
       throw TransactionFailedException(message: e.toString());
     }
   }
@@ -350,22 +367,16 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
         throw Exception('Uploaded file not accessible at $publicUrl');
       }
 
-      print("Upload successful. URL: $publicUrl");
       return publicUrl;
     } on StorageException catch (e) {
-      print("Supabase StorageException: ${e.message}");
       throw StorageException("Upload failed: ${e.message}");
     } on ClientException catch (e) {
-      print("Supabase ClientException: ${e.message}");
       throw ClientException("Upload failed: ${e.message}");
     } on SocketException catch (e) {
-      print("Supabase SocketException: ${e.message}");
       throw SocketException("Network issue: ${e.message}");
-    } on NullPublicUrlException catch (e) {
-      print(e);
+    } on NullPublicUrlException {
       rethrow;
     } catch (e) {
-      print("Unknown error during upload: $e");
       throw UnknownException();
     }
   }
@@ -396,11 +407,9 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
             ),
             chainId: 11155111);
       }
-      print(3);
       print('transaction hash --- $transactionHash');
       return transactionHash;
     } catch (e) {
-      print('setTime error:   ${e.toString()}');
       throw TransactionFailedException(message: e.toString());
     }
   }

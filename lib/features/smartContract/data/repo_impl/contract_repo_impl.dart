@@ -138,32 +138,31 @@ class ContractRepoImpl extends ContractRepository {
       return Left(OfflineFailure());
     }
   }
-@override
-ContractAllDta getAllData({int attempt = 1}) async {
-  const maxAttempts = 10;
 
-  if (await networkInfo.isConnected) {
-    try {
-      final data = await remoteContractDataSource.getAllData();
-      return Right(data);
-    } catch (e) {
-      if (e is TransactionFailedException) {
-        return Left(TransactionFailedFailure(message: e.message));
+  @override
+  ContractAllDta getAllData({int attempt = 1}) async {
+    const maxAttempts = 10;
+
+    if (await networkInfo.isConnected) {
+      try {
+        final data = await remoteContractDataSource.getAllData();
+        return Right(data);
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
+      }
+    } else {
+      if (attempt < maxAttempts) {
+        await Future.delayed(const Duration(seconds: 3));
+        return await getAllData(attempt: attempt + 1);
       } else {
-        return Left(UnkownFailure());
+        return Left(OfflineFailure());
       }
     }
-  } else {
-    if (attempt < maxAttempts) {
-      await Future.delayed(const Duration(seconds: 3));
-      return await getAllData( attempt: attempt + 1);
-    } else {
-      return Left(OfflineFailure());
-    }
   }
-}
-
-
 
   @override
   ContractData uploadImage(File pickedFile, String fileName) async {
@@ -187,12 +186,32 @@ ContractAllDta getAllData({int attempt = 1}) async {
       return Left(OfflineFailure());
     }
   }
-  
+
   @override
   ContractData setTime(int startTime, int endTime) async {
-     if (await networkInfo.isConnected) {
+    if (await networkInfo.isConnected) {
       try {
-        final txHash = await remoteContractDataSource.setTime(startTime,endTime);
+        final txHash =
+            await remoteContractDataSource.setTime(startTime, endTime);
+        return Right(txHash);
+      } catch (e) {
+        if (e is TransactionFailedException) {
+          return Left(TransactionFailedFailure(message: e.message));
+        } else {
+          return Left(UnkownFailure());
+        }
+      }
+    } else {
+      return Left(OfflineFailure());
+    }
+  }
+
+  @override
+  ContractData transferOwnership(String newAddress) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final txHash =
+            await remoteContractDataSource.transferOwnership(newAddress);
         return Right(txHash);
       } catch (e) {
         if (e is TransactionFailedException) {
@@ -208,7 +227,7 @@ ContractAllDta getAllData({int attempt = 1}) async {
 
   @override
   ContractData pause(bool pause) async {
-     if (await networkInfo.isConnected) {
+    if (await networkInfo.isConnected) {
       try {
         final txHash = await remoteContractDataSource.pause(pause);
         return Right(txHash);

@@ -20,6 +20,7 @@ import 'package:blockchain_based_national_election_admin_app/features/smartContr
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/get_state_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/pause_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/set_time_usecase.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/transfer_ownership_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/domain/usecase/uploadImage_usecase.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider_state.dart';
 import 'package:dartz/dartz.dart';
@@ -96,12 +97,20 @@ final getUploadedUrl = Provider<UploadimageUsecase>(
   },
 );
 
-final setTimeProver = Provider<SetTimeUsecase>(
+final setTimeProvider = Provider<SetTimeUsecase>(
   (ref) {
     final contractRepo = ref.watch(contractRepoProvider);
     return SetTimeUsecase(contractRepository: contractRepo);
   },
 );
+
+final transferOwnershipProvider = Provider<TransferOwnershipUsecase>(
+  (ref) {
+    final contractRepo = ref.watch(contractRepoProvider);
+    return TransferOwnershipUsecase(contractRepository: contractRepo);
+  },
+);
+
 final pauseProvider = Provider<PauseUsecase>(
   (ref) {
     final contractRepo = ref.watch(contractRepoProvider);
@@ -123,6 +132,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
   final UploadimageUsecase uploadimageUsecase;
 
   final SetTimeUsecase setTimeUsecase;
+  final TransferOwnershipUsecase transferOwnershipUsecase;
   final PauseUsecase pauseUsecase;
 
   ContractNotifier({
@@ -135,6 +145,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     required this.getAllDataUsecase,
     required this.uploadimageUsecase,
     required this.setTimeUsecase,
+    required this.transferOwnershipUsecase,
     required this.pauseUsecase,
   }) : super(ContractInitialState());
 
@@ -241,7 +252,7 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
   Future<AllDataModel?> fatchAllData() async {
     AllDataModel? allDataModel;
     state = ContractAllDataFetchingState();
-    final result = await getAllDataUsecase(); 
+    final result = await getAllDataUsecase();
     state = result.fold(
         (l) => ContractAllDataFailureState(message: _mapFailureToMessage(l)),
         (r) {
@@ -341,6 +352,19 @@ class ContractNotifier extends StateNotifier<ContractProviderState> {
     );
   }
 
+  Future<void> transferOwnership(String newAddress) async {
+    state = TransferingOwnershipState();
+
+    final result = await transferOwnershipUsecase(newAddress);
+    state = result.fold(
+      (l) => OwnershipTransferFailureState(message: _mapFailureToMessage(l)),
+      (r) {
+        fileUrl = r;
+        return OwnershipTransferedState(message: r);
+      },
+    );
+  }
+
   void resetState() {
     state = ContractInitialState();
   }
@@ -361,8 +385,9 @@ final contractProvider =
     final getStateUsecase = ref.watch(getStateProvider);
     final getAllDataUsecase = ref.watch(getAllDataProver);
     final getFileUrl = ref.watch(getUploadedUrl);
-    final setTimeUsecase = ref.watch(setTimeProver);
+    final setTimeUsecase = ref.watch(setTimeProvider);
     final pauseUsecase = ref.watch(pauseProvider);
+    final transferOwnership = ref.watch(transferOwnershipProvider);
 
     return ContractNotifier(
       addPartyUsecase: addPartyUsecase,
@@ -374,6 +399,7 @@ final contractProvider =
       getAllDataUsecase: getAllDataUsecase,
       uploadimageUsecase: getFileUrl,
       setTimeUsecase: setTimeUsecase,
+      transferOwnershipUsecase: transferOwnership,
       pauseUsecase: pauseUsecase,
     );
   },

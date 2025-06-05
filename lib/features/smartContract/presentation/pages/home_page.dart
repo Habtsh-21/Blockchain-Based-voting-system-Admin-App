@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:blockchain_based_national_election_admin_app/features/auth/presentation/provider/provider.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/party_model.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/data/model/state_model.dart';
+import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/pages/transfer_ownership_page.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/provider/provider.dart';
 import 'package:blockchain_based_national_election_admin_app/features/smartContract/presentation/widgets/box_widget.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,7 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   List<PartyModel>? partyList;
   List<StateModel>? stateList;
-    late String _currentTime;
+  late String _currentTime;
   late Timer _timer;
 
   @override
@@ -54,8 +55,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Scaffold(
       appBar:
-          AppBar(
-            centerTitle: true, title: const Text('DASHBOARD'), actions: [
+          AppBar(centerTitle: true, title: const Text('DASHBOARD'), actions: [
         Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(50)),
@@ -68,6 +68,12 @@ class _HomePageState extends ConsumerState<HomePage> {
         onLogout: () {
           ref.read(authStateProvider.notifier).logout();
         },
+        transferOwnership: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const TransferOwnershipPage()));
+        },
       ),
       body: ListView(
         padding: EdgeInsets.symmetric(
@@ -75,7 +81,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
         physics: const ClampingScrollPhysics(),
         children: [
-           Padding(
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: SizedBox(
               width: double.infinity,
@@ -144,6 +150,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Drawer buildDrawer({
     required VoidCallback onLogout,
+    required VoidCallback transferOwnership,
   }) {
     return Drawer(
       shape: const RoundedRectangleBorder(
@@ -177,6 +184,11 @@ class _HomePageState extends ConsumerState<HomePage> {
               backgroundColor: Colors.white,
               child: Icon(Icons.person, size: 40, color: Colors.deepPurple),
             ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.transfer_within_a_station),
+            title: const Text("Transfer Ownership"),
+            onTap: transferOwnership,
           ),
           ListTile(
             leading: const Icon(Icons.logout),

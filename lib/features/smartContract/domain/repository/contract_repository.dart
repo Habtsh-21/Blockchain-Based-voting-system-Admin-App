@@ -14,5 +14,6 @@ abstract class ContractRepository {
   ContractAllDta getAllData();
   ContractData uploadImage(File pickedFile, String fileName);
   ContractData setTime(int startTime, int endTime);
+  ContractData transferOwnership(String newAddress);
   ContractData pause(bool pause);
 }
