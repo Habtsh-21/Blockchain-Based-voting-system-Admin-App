@@ -11,15 +11,13 @@ contract Election {
         string partyName;
         string symbol;
         uint256 partyId;
-        uint256 totalVoteCount;
-        mapping(uint256 => uint256) stateVotes; // stateId => votes
+        mapping(uint256 => uint256) stateVotes; 
     }
 
     struct PartyView {
         string partyName;
         string symbol;
         uint256 partyId;
-        uint256 totalVoteCount;
         StateVote[] stateVotes;
     }
 
@@ -31,7 +29,6 @@ contract Election {
     address public electionAdmin;
     uint256 public votingStartTime;
     uint256 public votingEndTime;
-    uint256 public totalVotes;
     bool public votingPaused;
 
     uint256[] public partyIds;
@@ -71,7 +68,6 @@ contract Election {
         newParty.partyName = _name;
         newParty.symbol = _symbol;
         newParty.partyId = _partyId;
-        newParty.totalVoteCount = 0;
         partyIds.push(_partyId);
         emit PartyAdded(_partyId, _name);
     }
@@ -86,7 +82,6 @@ contract Election {
     function deleteParty(uint256 _partyId) public onlyAdmin {
         require(bytes(parties[_partyId].partyName).length != 0, "Party does not exist");
         _removeFromArray(partyIds, _partyId);
-        totalVotes -= parties[_partyId].totalVoteCount;
         delete parties[_partyId];
     }
 
@@ -115,9 +110,7 @@ contract Election {
         require(bytes(states[_voterState].stateName).length != 0, "State does not exist");
 
         Party storage party = parties[_votedPartyId];
-        party.totalVoteCount++;
         party.stateVotes[_voterState]++;
-        totalVotes++;
         voters[_hashedFaydaId] = true;
 
         emit VoteCast(_hashedFaydaId, _voterState, _votedPartyId);
@@ -182,7 +175,6 @@ contract Election {
                 partyName: party.partyName,
                 symbol: party.symbol,
                 partyId: party.partyId,
-                totalVoteCount: party.totalVoteCount,
                 stateVotes: stateVotesArray
             });
         }
@@ -203,7 +195,6 @@ contract Election {
         returns (
             State[] memory,
             PartyView[] memory,
-            uint256,
             bool,
             bool,
             bool,
@@ -214,8 +205,7 @@ contract Election {
         return (
             _getAllStates(),
             _getAllParties(),
-            totalVotes,
-            votingPaused,
+             votingPaused,
             isVotingActive(),
             hasUserVoted(_hashedFaydaId),
             votingStartTime,

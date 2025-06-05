@@ -16,12 +16,13 @@ const String _rpcUrl =
     'https://eth-sepolia.g.alchemy.com/v2/-ojPUotrULaRUfZmH3MRZTFQ7OH1wB22';
 const String _wsUrl =
     'ws://eth-sepolia.g.alchemy.com/v2/-ojPUotrULaRUfZmH3MRZTFQ7OH1wB22';
-const String contractAddress = "0x4F51C80508207Dc57b1Df9b51A96f4C7a8756B8c";
+const String contractAddress = "0x5bF77EcF1559b7b0A3b0E5B8Fbb900D336526010";
+//  "0x4F51C80508207Dc57b1Df9b51A96f4C7a8756B8c";
 //  "0xf41e2dD55e52074E08d86541b564B01f2D008641";
 // "0x248BE004170491254Fa7E3D4bd87979EF5f80855"; //updated contract address
 //  "0x47aAa3f944C584CFc52FC2b4057Ac54206B5eE2D";
 const String PRIVATE_KEY =
-    "9d9a132e6a883f1effe0520f10ccf060c6829c2d9df2f30c7261dd704466fab4";
+    "40bcc8600e04b79f7420f86bf89efe14c733f5356d661b304faaf1935a954be5";
 
 abstract class RemoteContractDataSource {
   Future<String> addParty(PartyModel partyModel);
@@ -83,6 +84,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> addParty(PartyModel partyModel) async {
     try {
+      print(1);
       await init();
 
       _addParty = _contract.function('addParty');
@@ -98,7 +100,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
             ],
           ),
           chainId: 11155111);
-
+      print(transactionHash);
       return transactionHash;
     } catch (e) {
       throw TransactionFailedException(message: e.toString());
@@ -108,8 +110,9 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
   @override
   Future<String> addState(StateModel stateModel) async {
     try {
+      print(1);
       await init();
-
+      print(2);
       _addState = _contract.function('addState');
       final transactionHash = await _client.sendTransaction(
           _credentials,
@@ -118,7 +121,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
               function: _addState,
               parameters: stateModel.toList()),
           chainId: 11155111);
-
+      print(transactionHash);
       return transactionHash;
     } catch (e) {
       throw TransactionFailedException(message: e.toString());
@@ -238,16 +241,16 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
         function: _getAllData,
         params: ['0x000000000000000000000'],
       );
-
+      int totalVotes = 0;
+      print(result);
       // Decode each item from result
       final rawStates = result[0] as List;
       final rawParties = result[1] as List;
-      int totalVotes = 0;
-      final votingPaused = result[3] as bool;
-      final votingActive = result[4] as bool;
-      final hasUserVoted = result[5] as bool;
-      final start = int.parse(result[6].toString());
-      final end = int.parse(result[7].toString());
+      final votingPaused = result[2] as bool;
+      final votingActive = result[3] as bool;
+      final hasUserVoted = result[4] as bool;
+      final start = int.parse(result[5].toString());
+      final end = int.parse(result[6].toString());
       DateTime? startTime;
       DateTime? endTime;
 
@@ -266,7 +269,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
       final partyList = rawParties.map((party) {
         int totalPartyVote = 0;
         Map<int, int> stateVotes = {};
-        List<List<int>> stateVoteList = (party[4] as List)
+        List<List<int>> stateVoteList = (party[3] as List)
             .map((e) => [
                   int.parse(e[0].toString()),
                   int.parse(e[1].toString()),
@@ -299,6 +302,7 @@ class RemoteContractDataSourceImpl extends RemoteContractDataSource {
         votingEndTime: endTime,
       );
     } catch (e) {
+      print(e.toString());
       throw TransactionFailedException(message: e.toString());
     }
   }

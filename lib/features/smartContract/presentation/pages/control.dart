@@ -100,38 +100,6 @@ class _ControlState extends ConsumerState<Control> {
   Future<void> _showSimpleTimeDialog() async {
     DateTime? tempStart = startTime;
     DateTime? tempEnd = endTime;
-    // ContractProviderState contractState = ref.watch(contractProvider);
-
-    // if (_previousState != contractState && contractState is VotePausedState) {
-    //   WidgetsBinding.instance.addPostFrameCallback((_) {
-    //     QuickAlert.show(
-    //       context: context,
-    //       type: QuickAlertType.success,
-    //       title: 'Success!',
-    //       textColor: Colors.black,
-    //       text: 'trxHash:${contractState.message}',
-    //       borderRadius: 0,
-    //       barrierColor: Colors.black.withOpacity(0.2),
-    //     );
-    //     ref.read(contractProvider.notifier).resetState();
-    //   });
-    // }
-    // if (_previousState != contractState &&
-    //     contractState is VotePauseFailureState) {
-    //   WidgetsBinding.instance.addPostFrameCallback((_) {
-    //     QuickAlert.show(
-    //       context: context,
-    //       type: QuickAlertType.error,
-    //       title: 'error!',
-    //       textColor: Colors.black,
-    //       text: 'trxHash:${contractState.message}',
-    //       borderRadius: 0,
-    //       barrierColor: Colors.black.withOpacity(0.2),
-    //     );
-    //     ref.read(contractProvider.notifier).resetState();
-    //   });
-    // }
-    // _previousState = contractState;
     await showDialog(
       context: context,
       builder: (context) {
@@ -215,10 +183,14 @@ class _ControlState extends ConsumerState<Control> {
                                   });
                                   Navigator.pop(context);
                                 }
+                                if(newState is TimeSettingFailureState){
+                                     Navigator.pop(context);
+
+                                }
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
+                        backgroundColor: isDisabled? Theme.of(context).primaryColor :Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
                       ),
                       child: state is TimeSettingState
