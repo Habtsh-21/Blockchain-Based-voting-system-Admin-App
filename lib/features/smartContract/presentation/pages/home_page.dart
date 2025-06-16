@@ -125,19 +125,19 @@ class _HomePageState extends ConsumerState<HomePage> {
               padding: const EdgeInsets.all(8),
               children: [
                 Box1(
-                    iconData: Icons.people_sharp,
+                  iconData: Icons.how_to_vote,
                     amount: totalUser,
                     text: 'VOTER'),
                 Box1(
-                    iconData: Icons.group_work_outlined,
+                  iconData: Icons.flag,
                     amount: noOfParties,
                     text: 'PARTIES'),
                 Box1(
-                    iconData: Icons.countertops,
+                    iconData: Icons.map,
                     amount: noOfStates,
                     text: 'STATES'),
                 Box1(
-                    iconData: Icons.person,
+                    iconData: Icons.how_to_reg,
                     amount: totalVotes,
                     text: 'TOTAL VOTES'),
               ],
